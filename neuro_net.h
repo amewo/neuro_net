@@ -16,7 +16,7 @@ public:
     neuro_net& operator=(const neuro_net& nnet) noexcept;
 
 protected:
-    std::vector<neuron> m_neurons;
+    std::vector<neuron*> m_neurons;
 };
 
 #endif // #ifndef neuro_net_h

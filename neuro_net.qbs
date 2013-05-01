@@ -9,5 +9,6 @@ DynamicLibrary
     cpp.cppFlags: ["-std=c++11"]
 
     files: ["neuro_net.h", "neuro_net.cpp",
-            "neuron.h","neuron.cpp"]
+            "neuron.h", "neuron.cpp",
+            "neuron_factory.h", "neuron_factory.cpp"]
 }
