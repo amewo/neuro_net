@@ -8,26 +8,8 @@ neuron::neuron(uint32_t id) noexcept
 {
 }
 
-neuron::neuron(const neuron &neu) noexcept
-{
-    m_bias = neu.m_bias;
-    m_sum = neu.m_sum;
-    m_signal = neu.m_signal;
-    m_in_links = neu.m_in_links;
-}
-
 neuron::~neuron() noexcept
 {
-}
-
-neuron &neuron::operator=(const neuron &neu) noexcept
-{
-    m_bias = neu.m_bias;
-    m_sum = neu.m_sum;
-    m_signal = neu.m_signal;
-    m_in_links = neu.m_in_links;
-
-    return *this;
 }
 
 float neuron::bias() const noexcept

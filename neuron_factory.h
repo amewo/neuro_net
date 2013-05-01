@@ -25,7 +25,7 @@ public:
 
     static neuron_factory& instance() noexcept;
 
-    virtual neuron* create_neuron(neuron_type type) noexcept;
+    virtual neuron* create_neuron(neuron_type type, uint32_t id) noexcept;
 };
 
 #endif // #define neuron_factory_h

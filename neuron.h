@@ -8,11 +8,11 @@ class neuron
 {
 public:
     neuron(uint32_t id) noexcept;
-    neuron(const neuron& neu) noexcept;
+    neuron(const neuron& neu) = delete;
 
     virtual ~neuron() noexcept;
 
-    neuron& operator=(const neuron& neu) noexcept;
+    neuron& operator=(const neuron& neu) = delete;
 
     float bias() const noexcept;
     void  set_bias(float bias) noexcept;
