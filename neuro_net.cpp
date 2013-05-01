@@ -68,3 +68,31 @@ neuron* neuro_net::get_neuron(uint32_t id) noexcept
 
     return nullptr;
 }
+
+uint32_t neuro_net::get_in_size() const noexcept
+{
+    return m_in_neurons.size();
+}
+
+uint32_t neuro_net::get_out_size() const noexcept
+{
+    return m_out_neurons.size();
+}
+
+bool neuro_net::mark_neuron_as_input(uint32_t) noexcept
+{
+    return false;
+}
+
+bool neuro_net::mark_neuron_as_output(uint32_t) noexcept
+{
+    return false;
+}
+
+void neuro_net::calc_signal() noexcept
+{
+    for(auto neu : m_neurons)
+    {
+        neu->calc_signal();
+    }
+}

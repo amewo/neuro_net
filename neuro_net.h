@@ -36,8 +36,22 @@ public:
 
     neuron* get_neuron(uint32_t id) noexcept;
 
+    // Размер вектора входного сигнала.
+    uint32_t get_in_size() const noexcept;
+
+    // Размер вектора выходного сигнала.
+    uint32_t get_out_size() const noexcept;
+
+    bool mark_neuron_as_input(uint32_t) noexcept;
+    bool mark_neuron_as_output(uint32_t) noexcept;
+
+    void calc_signal() noexcept;
+
 protected:
     std::vector<neuron*> m_neurons;
+
+    std::vector<neuron*> m_in_neurons;
+    std::vector<neuron*> m_out_neurons;
 };
 
 #endif // #ifndef neuro_net_h
