@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <vector>
 
+//-----------------------------------------------------------------------------
 class neuron
 {
 public:
@@ -49,5 +50,18 @@ protected:
 
     std::vector<neuron_in_link> m_in_links;
 };
+//-----------------------------------------------------------------------------
+class input_neuron : public neuron
+{
+public:
+    input_neuron(uint32_t id) noexcept;
+    input_neuron(const input_neuron& neu) = delete;
+
+    input_neuron& operator=(const input_neuron& neu) = delete;
+
+    virtual float calc_sum() noexcept override;
+    virtual float calc_signal() noexcept override;
+};
+//-----------------------------------------------------------------------------
 
 #endif // #define neuron_h

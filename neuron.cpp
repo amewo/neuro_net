@@ -1,5 +1,6 @@
 #include "neuron.h"
 
+//-----------------------------------------------------------------------------
 neuron::neuron(uint32_t id) noexcept
     : m_bias(0.0f)
     , m_sum(0.0f)
@@ -7,41 +8,41 @@ neuron::neuron(uint32_t id) noexcept
     , m_id(id)
 {
 }
-
+//-----------------------------------------------------------------------------
 neuron::~neuron() noexcept
 {
 }
-
+//-----------------------------------------------------------------------------
 float neuron::bias() const noexcept
 {
     return m_bias;
 }
-
+//-----------------------------------------------------------------------------
 void neuron::set_bias(float bias) noexcept
 {
     m_bias = bias;
 }
-
+//-----------------------------------------------------------------------------
 float neuron::sum() const noexcept
 {
     return m_sum;
 }
-
+//-----------------------------------------------------------------------------
 float neuron::signal() const noexcept
 {
     return m_signal;
 }
-
+//-----------------------------------------------------------------------------
 void neuron::set_signal(float signal) noexcept
 {
     m_signal = signal;
 }
-
+//-----------------------------------------------------------------------------
 uint32_t neuron::id() const noexcept
 {
     return m_id;
 }
-
+//-----------------------------------------------------------------------------
 bool neuron::add_link(neuron *neu, float w) noexcept
 {
     for( auto& link : m_in_links )
@@ -56,7 +57,7 @@ bool neuron::add_link(neuron *neu, float w) noexcept
 
     return true;
 }
-
+//-----------------------------------------------------------------------------
 bool neuron::del_link(neuron *neu) noexcept
 {
     auto link_iter = m_in_links.begin();
@@ -75,7 +76,7 @@ bool neuron::del_link(neuron *neu) noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 float neuron::calc_sum() noexcept
 {
     float sum = 0.0f;
@@ -89,13 +90,30 @@ float neuron::calc_sum() noexcept
 
     return m_sum;
 }
-
+//-----------------------------------------------------------------------------
 float neuron::calc_signal() noexcept
 {
     return m_signal = activation_function(calc_sum());
 }
-
+//-----------------------------------------------------------------------------
 float neuron::activation_function(float sum) const noexcept
 {
     return sum;
 }
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+input_neuron::input_neuron(uint32_t id) noexcept
+    : neuron(id)
+{
+}
+//-----------------------------------------------------------------------------
+float input_neuron::calc_sum() noexcept
+{
+    return m_sum;
+}
+//-----------------------------------------------------------------------------
+float input_neuron::calc_signal() noexcept
+{
+    return m_signal;
+}
+//-----------------------------------------------------------------------------

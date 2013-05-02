@@ -2,9 +2,11 @@
 #define neuro_net_h
 
 #include <vector>
+#include <stdexcept>
 
 #include "neuron.h"
 
+//-----------------------------------------------------------------------------
 // Класс нейронной сети.
 //
 // Все нейроны сети хранятся в векторе. Экземпляры класса нейрона хранятся в упорядоченном
@@ -57,6 +59,18 @@ public:
     std::vector<uint32_t> get_ids_of_input_neurons() const noexcept;
     std::vector<uint32_t> get_ids_of_output_neurons() const noexcept;
 
+    bool link_neurons(uint32_t id_from, uint32_t id_to, float w) noexcept;
+
+    void link_neurons(const std::vector<uint32_t>& ids_from,
+                      const std::vector<uint32_t>& ids_to,
+                      float w
+                      ) throw (std::runtime_error);
+
+    void link_neurons(const std::vector<uint32_t>& ids_from,
+                      const std::vector<uint32_t>& ids_to,
+                      const std::vector<std::vector<float>>& ws
+                      ) throw (std::runtime_error);
+
     void calc_signal() noexcept;
 
 protected:
@@ -66,5 +80,6 @@ protected:
     std::vector<neuron*> m_in_neurons;
     std::vector<neuron*> m_out_neurons;
 };
+//-----------------------------------------------------------------------------
 
 #endif // #ifndef neuro_net_h

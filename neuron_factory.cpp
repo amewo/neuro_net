@@ -25,7 +25,7 @@ neuron* neuron_factory::create_neuron(neuron_type type, uint32_t id) noexcept
         case linear_neuron:
             return new neuron(id);
 
-        case hyperbolic_neuron:
+        case hyperbolic_tangent_neuron:
             return nullptr;
 
         default:

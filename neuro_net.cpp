@@ -1,9 +1,12 @@
+#include <boost/lexical_cast.hpp>
+
 #include "neuro_net.h"
 
+//-----------------------------------------------------------------------------
 neuro_net::neuro_net() noexcept
 {
 }
-
+//-----------------------------------------------------------------------------
 neuro_net::~neuro_net() noexcept
 {
     for(auto neu : m_neurons)
@@ -11,7 +14,7 @@ neuro_net::~neuro_net() noexcept
         delete neu;
     }
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::add_neuron(neuron *neu) noexcept
 {
     auto neu_iter = m_neurons.begin();
@@ -35,7 +38,7 @@ bool neuro_net::add_neuron(neuron *neu) noexcept
 
     return true;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::del_neuron(uint32_t id) noexcept
 {
     auto neu_iter = m_neurons.begin();
@@ -60,7 +63,7 @@ bool neuro_net::del_neuron(uint32_t id) noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 neuron* neuro_net::get_neuron(uint32_t id) noexcept
 {
     for(auto neu : m_neurons)
@@ -73,17 +76,17 @@ neuron* neuro_net::get_neuron(uint32_t id) noexcept
 
     return nullptr;
 }
-
+//-----------------------------------------------------------------------------
 uint32_t neuro_net::get_in_size() const noexcept
 {
     return m_in_neurons.size();
 }
-
+//-----------------------------------------------------------------------------
 uint32_t neuro_net::get_out_size() const noexcept
 {
     return m_out_neurons.size();
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::mark_neuron_as_input(uint32_t id) noexcept
 {
     //todo: добавить проверку по типу нейрона. runtime_cast.
@@ -99,7 +102,7 @@ bool neuro_net::mark_neuron_as_input(uint32_t id) noexcept
 
     return true;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::mark_neuron_as_output(uint32_t id) noexcept
 {
     neuron *neu = get_neuron(id);
@@ -113,7 +116,7 @@ bool neuro_net::mark_neuron_as_output(uint32_t id) noexcept
 
     return true;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::unmark_neuron_as_input(uint32_t id) noexcept
 {
     auto neu_iter = m_in_neurons.begin();
@@ -132,7 +135,7 @@ bool neuro_net::unmark_neuron_as_input(uint32_t id) noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::unmark_neuron_as_output(uint32_t id) noexcept
 {
     auto neu_iter = m_out_neurons.begin();
@@ -151,7 +154,7 @@ bool neuro_net::unmark_neuron_as_output(uint32_t id) noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::neuron_is_input(uint32_t id) const noexcept
 {
     for( auto neu : m_in_neurons )
@@ -164,7 +167,7 @@ bool neuro_net::neuron_is_input(uint32_t id) const noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 bool neuro_net::neuron_is_output(uint32_t id) const noexcept
 {
     for( auto neu : m_out_neurons )
@@ -177,17 +180,17 @@ bool neuro_net::neuron_is_output(uint32_t id) const noexcept
 
     return false;
 }
-
+//-----------------------------------------------------------------------------
 const std::vector<neuron*>& neuro_net::get_input_neurons() const noexcept
 {
     return m_in_neurons;
 }
-
+//-----------------------------------------------------------------------------
 const std::vector<neuron*>& neuro_net::get_output_neurons() const noexcept
 {
     return m_out_neurons;
 }
-
+//-----------------------------------------------------------------------------
 std::vector<uint32_t> neuro_net::get_ids_of_input_neurons() const noexcept
 {
     std::vector<uint32_t> ids;
@@ -199,7 +202,7 @@ std::vector<uint32_t> neuro_net::get_ids_of_input_neurons() const noexcept
 
     return ids;
 }
-
+//-----------------------------------------------------------------------------
 std::vector<uint32_t> neuro_net::get_ids_of_output_neurons() const noexcept
 {
     std::vector<uint32_t> ids;
@@ -211,7 +214,109 @@ std::vector<uint32_t> neuro_net::get_ids_of_output_neurons() const noexcept
 
     return ids;
 }
+//-----------------------------------------------------------------------------
+bool neuro_net::link_neurons(uint32_t id_from, uint32_t id_to, float w) noexcept
+{
+    neuron *neu_from = get_neuron(id_from);
+    neuron *neu_to = get_neuron(id_to);
 
+    if( neu_from == nullptr || neu_to == nullptr )
+    {
+        return false;
+    }
+
+    return neu_to->add_link(neu_from, w);
+}
+//-----------------------------------------------------------------------------
+void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
+                  const std::vector<uint32_t>& ids_to,
+                  float w
+                  ) throw (std::runtime_error)
+{
+    for( auto id_to : ids_to )
+    {
+        neuron *neu_to = get_neuron(id_to);
+
+        if( neu_to == nullptr )
+        {
+            throw std::runtime_error(std::string("bad neuron id - ") + boost::lexical_cast<std::string>(id_to));
+        }
+
+        for( auto id_from : ids_from )
+        {
+            neuron *neu_from = get_neuron(id_from);
+
+            if( neu_from == nullptr )
+            {
+                throw std::runtime_error(std::string("bad neuron id - ") + boost::lexical_cast<std::string>(neu_from));
+            }
+
+            bool res = neu_to->add_link(neu_from, w);
+
+            if( res == false )
+            {
+                throw std::runtime_error(std::string("error link neuron - ") + boost::lexical_cast<std::string>(neu_to) +
+                                         std::string(" with neuron ") + boost::lexical_cast<std::string>(neu_from));
+            }
+        }
+    }
+}
+//-----------------------------------------------------------------------------
+void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
+                  const std::vector<uint32_t>& ids_to,
+                  const std::vector<std::vector<float>>& ws
+                  ) throw (std::runtime_error)
+{
+    if( ws.size() != ids_to.size() )
+    {
+        throw std::runtime_error("error size of vector ws");
+    }
+
+    for( auto& w : ws )
+    {
+        if( w.size() != ids_from.size() )
+        {
+            throw std::runtime_error("error size of vector ws");
+        }
+    }
+
+    size_t i = 0;
+
+    for( auto id_to : ids_to )
+    {
+        neuron *neu_to = get_neuron(id_to);
+
+        if( neu_to == nullptr )
+        {
+            throw std::runtime_error(std::string("bad neuron id - ") + boost::lexical_cast<std::string>(id_to));
+        }
+
+        size_t j = 0;
+
+        for( auto id_from : ids_from )
+        {
+            neuron *neu_from = get_neuron(id_from);
+
+            if( neu_from == nullptr )
+            {
+                throw std::runtime_error(std::string("bad neuron id - ") + boost::lexical_cast<std::string>(neu_from));
+            }
+
+            bool res = neu_to->add_link(neu_from, ws[i][j]);
+
+            if( res == false )
+            {
+                throw std::runtime_error(std::string("error link neuron - ") + boost::lexical_cast<std::string>(neu_to) +
+                                         std::string(" with neuron ") + boost::lexical_cast<std::string>(neu_from));
+            }
+
+            ++j;
+        }
+
+        ++i;
+    }
+}
+//-----------------------------------------------------------------------------
 void neuro_net::calc_signal() noexcept
 {
     for(auto neu : m_neurons)
@@ -219,3 +324,4 @@ void neuro_net::calc_signal() noexcept
         neu->calc_signal();
     }
 }
+//-----------------------------------------------------------------------------

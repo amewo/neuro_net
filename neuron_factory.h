@@ -5,14 +5,15 @@
 
 #include "neuron.h"
 
+//-----------------------------------------------------------------------------
 enum neuron_type : uint32_t
 {
     input_neuron,
 
     linear_neuron,
-    hyperbolic_neuron
+    hyperbolic_tangent_neuron
 };
-
+//-----------------------------------------------------------------------------
 class neuron_factory
 {
 public:
@@ -27,5 +28,6 @@ public:
 
     virtual neuron* create_neuron(neuron_type type, uint32_t id) noexcept;
 };
+//-----------------------------------------------------------------------------
 
 #endif // #define neuron_factory_h
