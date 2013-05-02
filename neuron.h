@@ -25,8 +25,8 @@ public:
 
     uint32_t id() const noexcept;
 
-    bool  add_link(neuron *neu, float w) noexcept;
-    bool  del_link(neuron *neu) noexcept;
+    bool add_link(neuron *neu, float w) noexcept;
+    bool del_link(neuron *neu) noexcept;
 
     virtual float calc_sum() noexcept;
     virtual float calc_signal() noexcept;

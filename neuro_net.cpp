@@ -229,9 +229,9 @@ bool neuro_net::link_neurons(uint32_t id_from, uint32_t id_to, float w) noexcept
 }
 //-----------------------------------------------------------------------------
 void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
-                  const std::vector<uint32_t>& ids_to,
-                  float w
-                  ) throw (std::runtime_error)
+                             const std::vector<uint32_t>& ids_to,
+                             float w
+                             ) throw (std::runtime_error)
 {
     for( auto id_to : ids_to )
     {
@@ -263,9 +263,9 @@ void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
 }
 //-----------------------------------------------------------------------------
 void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
-                  const std::vector<uint32_t>& ids_to,
-                  const std::vector<std::vector<float>>& ws
-                  ) throw (std::runtime_error)
+                             const std::vector<uint32_t>& ids_to,
+                             const std::vector<std::vector<float>>& ws
+                             ) throw (std::runtime_error)
 {
     if( ws.size() != ids_to.size() )
     {
@@ -315,6 +315,25 @@ void neuro_net::link_neurons(const std::vector<uint32_t>& ids_from,
 
         ++i;
     }
+}
+//-----------------------------------------------------------------------------
+bool neuro_net::unlink_neurons(uint32_t id_from, uint32_t id_to) noexcept
+{
+    neuron *neu_from = get_neuron(id_from);
+    neuron *neu_to = get_neuron(id_to);
+
+    if( neu_from == nullptr || neu_to == nullptr )
+    {
+        return false;
+    }
+
+    return neu_to->del_link(neu_from);
+}
+//-----------------------------------------------------------------------------
+void unlink_neurons(const std::vector<uint32_t>& ids_from,
+                    const std::vector<uint32_t>& ids_to
+                    ) throw (std::runtime_error)
+{
 }
 //-----------------------------------------------------------------------------
 void neuro_net::calc_signal() noexcept

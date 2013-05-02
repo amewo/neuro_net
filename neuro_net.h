@@ -71,6 +71,12 @@ public:
                       const std::vector<std::vector<float>>& ws
                       ) throw (std::runtime_error);
 
+    bool unlink_neurons(uint32_t id_from, uint32_t id_to) noexcept;
+
+    void unlink_neurons(const std::vector<uint32_t>& ids_from,
+                      const std::vector<uint32_t>& ids_to
+                      ) throw (std::runtime_error);
+
     void calc_signal() noexcept;
 
 protected:
