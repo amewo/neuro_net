@@ -44,7 +44,7 @@ uint32_t neuron::id() const noexcept
 
 bool neuron::add_link(neuron *neu, float w) noexcept
 {
-    for(auto& link : m_in_links)
+    for( auto& link : m_in_links )
     {
         if( link.neu == neu )
         {
@@ -59,16 +59,18 @@ bool neuron::add_link(neuron *neu, float w) noexcept
 
 bool neuron::del_link(neuron *neu) noexcept
 {
-    auto link = m_in_links.begin();
+    auto link_iter = m_in_links.begin();
 
-    while(link != m_in_links.end())
+    while( link_iter != m_in_links.end() )
     {
-        if( link->neu == neu )
+        if( link_iter->neu == neu )
         {
-            m_in_links.erase(link);
+            m_in_links.erase(link_iter);
 
             return false;
         }
+
+        ++link_iter;
     }
 
     return false;
@@ -78,7 +80,7 @@ float neuron::calc_sum() noexcept
 {
     float sum = 0.0f;
 
-    for(auto& link : m_in_links)
+    for( auto& link : m_in_links )
     {
         sum += link.neu->signal() * link.w;
     }

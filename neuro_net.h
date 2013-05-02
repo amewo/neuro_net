@@ -42,12 +42,25 @@ public:
     // Размер вектора выходного сигнала.
     uint32_t get_out_size() const noexcept;
 
-    bool mark_neuron_as_input(uint32_t) noexcept;
-    bool mark_neuron_as_output(uint32_t) noexcept;
+    bool mark_neuron_as_input(uint32_t id) noexcept;
+    bool mark_neuron_as_output(uint32_t id) noexcept;
+
+    bool unmark_neuron_as_input(uint32_t id) noexcept;
+    bool unmark_neuron_as_output(uint32_t id) noexcept;
+
+    bool neuron_is_input(uint32_t id) const noexcept;
+    bool neuron_is_output(uint32_t id) const noexcept;
+
+    const std::vector<neuron*>& get_input_neurons() const noexcept;
+    const std::vector<neuron*>& get_output_neurons() const noexcept;
+
+    std::vector<uint32_t> get_ids_of_input_neurons() const noexcept;
+    std::vector<uint32_t> get_ids_of_output_neurons() const noexcept;
 
     void calc_signal() noexcept;
 
 protected:
+
     std::vector<neuron*> m_neurons;
 
     std::vector<neuron*> m_in_neurons;

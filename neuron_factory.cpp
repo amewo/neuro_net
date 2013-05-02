@@ -11,6 +11,7 @@ neuron_factory::~neuron_factory() noexcept
 neuron_factory& neuron_factory::instance() noexcept
 {
     static neuron_factory _neuron_factory;
+
     return _neuron_factory;
 }
 
