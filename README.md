@@ -4,7 +4,8 @@
   - реализоваь классы для работы с паттернами (загрузка из истории котировок, сериализация и десериализация, подготовка обучающей выборки)
   - реализовать в нейронной сети возможность установки и получания сигналов из/в паттерны
 
-http://www.forexfactory.com/showthread.php?t=57824
-http://www.forexfactory.com/showthread.php?p=1717926#post1717926
-http://www.forexfactory.com/showthread.php?t=69699
-http://www.forexfactory.com/showthread.php?t=71007
+Интересные ссылки:
+ - http://www.forexfactory.com/showthread.php?t=57824
+ - http://www.forexfactory.com/showthread.php?p=1717926#post1717926
+ - http://www.forexfactory.com/showthread.php?t=69699
+ - http://www.forexfactory.com/showthread.php?t=71007
