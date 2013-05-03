@@ -80,7 +80,6 @@ public:
     void calc_signal() noexcept;
 
 protected:
-
     std::vector<neuron*> m_neurons;
 
     std::vector<neuron*> m_in_neurons;

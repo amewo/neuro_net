@@ -12,5 +12,6 @@ DynamicLibrary
 
     files: ["neuro_net.h", "neuro_net.cpp",
             "neuron.h", "neuron.cpp",
-            "neuron_factory.h", "neuron_factory.cpp"]
+            "neuron_factory.h", "neuron_factory.cpp",
+            "patterns.h", "patterns.cpp"]
 }
