@@ -49,14 +49,7 @@ int main()
     nnet.get_neuron(1)->set_signal(1.0f);
     nnet.get_neuron(2)->set_signal(1.0f);
 
-    cout << "calc begin" << endl;
-
-    for(int i = 0; i < 1000000; ++i)
-    {
-        nnet.calc_signal();
-    }
-
-    cout << "calc end" << endl;
+    nnet.calc_signal();
 
     cout << nnet.get_neuron(5)->signal() << endl;
     cout << nnet.get_neuron(6)->signal() << endl;
