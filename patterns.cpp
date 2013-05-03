@@ -75,3 +75,23 @@ std::size_t patterns::get_size() const noexcept
     return m_patterns.size();
 }
 //-----------------------------------------------------------------------------
+pattern& patterns::get_pattern(std::size_t indx) throw (std::range_error)
+{
+    if( indx >= m_patterns.size() )
+    {
+        throw std::range_error("indx > m_patterns.size()");
+    }
+
+    return m_patterns[indx];
+}
+//-----------------------------------------------------------------------------
+pattern& patterns::operator[](std::size_t indx) throw (std::range_error)
+{
+    if( indx >= m_patterns.size() )
+    {
+        throw std::range_error("indx > m_patterns.size()");
+    }
+
+    return m_patterns[indx];
+}
+//-----------------------------------------------------------------------------

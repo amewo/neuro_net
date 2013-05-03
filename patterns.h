@@ -2,6 +2,7 @@
 #define patterns_h
 
 #include <vector>
+#include <stdexcept>
 
 //-----------------------------------------------------------------------------
 class pattern
@@ -35,6 +36,9 @@ public:
     std::size_t get_out_size() const noexcept;
 
     std::size_t get_size() const noexcept;
+
+    pattern& get_pattern(std::size_t indx) throw (std::range_error);
+    pattern& operator[](std::size_t indx) throw (std::range_error);
 
 protected:
     std::size_t m_in_size;
