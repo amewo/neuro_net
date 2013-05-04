@@ -20,7 +20,7 @@ int main()
         }
         else
         {
-            nnet.add_neuron( neu_factory.create_neuron(linear_neuron_type, i) );
+            nnet.add_neuron( neu_factory.create_neuron(hyperbolic_neuron_type, i) );
         }
     }
 
@@ -43,11 +43,11 @@ int main()
     nnet.mark_neuron_as_output(5);
     nnet.mark_neuron_as_output(6);
 
-    nnet.link_neurons(ids_from1, ids_to1, 1.0f);
-    nnet.link_neurons(ids_to1, ids_to2, 1.0f);
+    nnet.link_neurons(ids_from1, ids_to1, 0.38f);
+    nnet.link_neurons(ids_to1, ids_to2, 1.73f);
 
-    nnet.get_neuron(1)->set_signal(1.0f);
-    nnet.get_neuron(2)->set_signal(1.0f);
+    nnet.get_neuron(1)->set_signal(0.23f);
+    nnet.get_neuron(2)->set_signal(-0.02f);
 
     nnet.calc_signal();
 

@@ -11,7 +11,7 @@ enum neuron_type : uint32_t
     input_neuron_type,
 
     linear_neuron_type,
-    hyperbolic_tangent_neuron_type
+    hyperbolic_neuron_type
 };
 //-----------------------------------------------------------------------------
 class neuron_factory

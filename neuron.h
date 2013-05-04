@@ -36,15 +36,16 @@ public:
 
     virtual float activation_function(float sum) const noexcept;
 
-    void save_state(neuron_state *state) noexcept;
+    virtual void save_state(neuron_state *state) noexcept;
 
     // Восстанавливает только значение смещения, суммы и сигнала нейрона.
     // Возвращает вектор идентификаторов нейронов, которые необходимы для восстановления связей.
-    const std::vector<uint32_t> restore_state(neuron_state *state) noexcept;
+    virtual std::vector<uint32_t> restore_state(const neuron_state *state) noexcept;
+
     // Восстанавливает связи нейрона. Принимает состояние нейрона, которое было передано в
     // метод restore_state и вектор указателей на нейроны, в котором элементы соответстуют элемента
     // вектора, возвращенного методом restore_state.
-    void restore_links_state(neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error);
+    virtual void restore_links_state(const neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error);
 
 protected:
     float m_bias;   // Смещение нейрона.
@@ -74,6 +75,17 @@ public:
 
     virtual float calc_sum() noexcept override;
     virtual float calc_signal() noexcept override;
+};
+//-----------------------------------------------------------------------------
+class hyperbolic_neuron : public neuron
+{
+public:
+    hyperbolic_neuron(uint32_t id) noexcept;
+    hyperbolic_neuron(const hyperbolic_neuron& neu) = delete;
+
+    hyperbolic_neuron& operator=(const hyperbolic_neuron& neu) = delete;
+
+    virtual float activation_function(float sum) const noexcept override;
 };
 //-----------------------------------------------------------------------------
 

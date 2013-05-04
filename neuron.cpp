@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "neuron.h"
 
 //-----------------------------------------------------------------------------
@@ -118,14 +120,45 @@ void neuron::save_state(neuron_state *state) noexcept
     }
 }
 //-----------------------------------------------------------------------------
-const std::vector<uint32_t> neuron::restore_state(neuron_state *state) noexcept
+std::vector<uint32_t> neuron::restore_state(const neuron_state *state) noexcept
 {
-    //todo:???
+    m_bias = state->bias();
+    m_sum = state->sum();
+    m_signal = state->signal();
+
+    std::vector<uint32_t> ids;
+
+    for( int i = 0; i < state->links_size(); ++i )
+    {
+        ids.push_back(state->links(i).id());
+    }
+
+    return ids;
 }
 //-----------------------------------------------------------------------------
-void neuron::restore_links_state(neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error)
+void neuron::restore_links_state(const neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error)
 {
-    //todo:???
+    m_links.clear();
+
+    if( state->links_size() != (int) neus.size() )
+    {
+        throw std::runtime_error("error size of vector \"neus\"");
+    }
+
+    for( int i = 0; i < state->links_size(); ++i )
+    {
+        const neuron_link_state &link_state = state->links(i);
+
+        if( link_state.id() != neus[i]->id() )
+        {
+            throw std::runtime_error("can't restore neuron link - link_state.id() != neus[i]->id()");
+        }
+
+        if( add_link(neus[i], link_state.w()) == false )
+        {
+            throw std::runtime_error("can't restore neuron link - error add new link");
+        }
+    }
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -142,5 +175,16 @@ float input_neuron::calc_sum() noexcept
 float input_neuron::calc_signal() noexcept
 {
     return m_signal;
+}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+hyperbolic_neuron::hyperbolic_neuron(uint32_t id) noexcept
+    : neuron(id)
+{
+}
+//-----------------------------------------------------------------------------
+float hyperbolic_neuron::activation_function(float sum) const noexcept
+{
+    return tanh(sum);
 }
 //-----------------------------------------------------------------------------

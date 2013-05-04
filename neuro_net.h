@@ -83,6 +83,8 @@ public:
 
     void calc_signal() noexcept;
 
+    void save_state(neuro_net_state *state) const noexcept;
+
 protected:
     std::vector<neuron*> m_neurons;
 

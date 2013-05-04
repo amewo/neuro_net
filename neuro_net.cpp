@@ -371,3 +371,14 @@ void neuro_net::calc_signal() noexcept
     }
 }
 //-----------------------------------------------------------------------------
+void neuro_net::save_state(neuro_net_state *state) const noexcept
+{
+    state->Clear();
+
+    for(auto neu : m_neurons)
+    {
+        neuron_state *neu_state = state->add_neurons();
+        neu->save_state(neu_state);
+    }
+}
+//-----------------------------------------------------------------------------

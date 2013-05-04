@@ -13,6 +13,14 @@ message neuron_state
   repeated neuron_link_state links = 4;
 }
 
+message neuro_net_state
+{
+  repeated neuron_state neurons = 1;
+  
+  repeated uint32 in_neurons_ids = 2;
+  repeated uint32 out_neurons_ids = 3;
+}
+
 message pattern_state
 {
   repeated float in = 1;
@@ -21,5 +29,10 @@ message pattern_state
 
 message patterns_state
 {
-  repeated pattern_state patterns = 1;
+  required string name = 1;
+
+  required uint32 size_of_in = 2;
+  required uint32 size_of_out = 3;
+
+  repeated pattern_state patterns = 4;
 }
