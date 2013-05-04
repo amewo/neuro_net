@@ -53,6 +53,21 @@ bool pattern::set_out(const std::vector<float> out) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
+void pattern::save_state(pattern_state *state) noexcept
+{
+    state->Clear();
+
+    for( auto in_val : m_in )
+    {
+        state->add_in(in_val);
+    }
+
+    for( auto out_val : m_out )
+    {
+        state->add_out(out_val);
+    }
+}
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 patterns::patterns(std::size_t in_size, std::size_t out_size) noexcept
     : m_in_size(in_size)
@@ -93,5 +108,17 @@ pattern& patterns::operator[](std::size_t indx) throw (std::range_error)
     }
 
     return m_patterns[indx];
+}
+//-----------------------------------------------------------------------------
+void patterns::save_state(patterns_state *state) noexcept
+{
+    state->Clear();
+
+    for( auto& cur_pattern : m_patterns )
+    {
+        pattern_state *cur_pattern_state = state->add_patterns();
+
+        cur_pattern.save_state(cur_pattern_state);
+    }
 }
 //-----------------------------------------------------------------------------

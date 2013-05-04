@@ -45,7 +45,7 @@ uint32_t neuron::id() const noexcept
 //-----------------------------------------------------------------------------
 bool neuron::add_link(neuron *neu, float w) noexcept
 {
-    for( auto& link : m_in_links )
+    for( auto& link : m_links )
     {
         if( link.neu == neu )
         {
@@ -53,20 +53,20 @@ bool neuron::add_link(neuron *neu, float w) noexcept
         }
     }
 
-    m_in_links.push_back(neuron_in_link(neu, w));
+    m_links.push_back(neuron_link(neu, w));
 
     return true;
 }
 //-----------------------------------------------------------------------------
 bool neuron::del_link(neuron *neu) noexcept
 {
-    auto link_iter = m_in_links.begin();
+    auto link_iter = m_links.begin();
 
-    while( link_iter != m_in_links.end() )
+    while( link_iter != m_links.end() )
     {
         if( link_iter->neu == neu )
         {
-            m_in_links.erase(link_iter);
+            m_links.erase(link_iter);
 
             return false;
         }
@@ -81,7 +81,7 @@ float neuron::calc_sum() noexcept
 {
     float sum = 0.0f;
 
-    for( auto& link : m_in_links )
+    for( auto& link : m_links )
     {
         sum += link.neu->signal() * link.w;
     }
@@ -99,6 +99,33 @@ float neuron::calc_signal() noexcept
 float neuron::activation_function(float sum) const noexcept
 {
     return sum;
+}
+//-----------------------------------------------------------------------------
+void neuron::save_state(neuron_state *state) noexcept
+{
+    state->Clear();
+
+    state->set_bias(m_bias);
+    state->set_sum(m_sum);
+    state->set_signal(m_signal);
+
+    for( auto& link : m_links )
+    {
+        neuron_link_state *link_state = state->add_links();
+
+        link_state->set_id(link.neu->id());
+        link_state->set_w(link.w);
+    }
+}
+//-----------------------------------------------------------------------------
+const std::vector<uint32_t> neuron::restore_state(neuron_state *state) noexcept
+{
+    //todo:???
+}
+//-----------------------------------------------------------------------------
+void neuron::restore_links_state(neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error)
+{
+    //todo:???
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

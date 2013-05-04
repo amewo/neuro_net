@@ -8,10 +8,11 @@ DynamicLibrary
 
     cpp.cppFlags: ["-std=c++11"]
 
-    cpp.dynamicLibraries: ["boost_system"]
+    cpp.dynamicLibraries: ["boost_system","protobuf"]
 
     files: ["neuro_net.h", "neuro_net.cpp",
             "neuron.h", "neuron.cpp",
             "neuron_factory.h", "neuron_factory.cpp",
-            "patterns.h", "patterns.cpp"]
+            "patterns.h", "patterns.cpp",
+            "states.pb.h","states.pb.cpp"]
 }

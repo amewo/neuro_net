@@ -155,6 +155,32 @@ bool neuro_net::unmark_neuron_as_output(uint32_t id) noexcept
     return false;
 }
 //-----------------------------------------------------------------------------
+void neuro_net::mark_neurons_as_input(const std::vector<uint32_t>& ids) throw(std::runtime_error)
+{
+    m_in_neurons.clear();
+
+    for( auto id : ids )
+    {
+        if( mark_neuron_as_input(id) == false )
+        {
+            throw std::runtime_error(std::string("can't mark neuron - ") + boost::lexical_cast<std::string>(id) + "as input");
+        }
+    }
+}
+//-----------------------------------------------------------------------------
+void neuro_net::mark_neurons_as_output(const std::vector<uint32_t>& ids) throw(std::runtime_error)
+{
+    m_out_neurons.clear();
+
+    for( auto id : ids )
+    {
+        if( mark_neuron_as_output(id) == false )
+        {
+            throw std::runtime_error(std::string("can't mark neuron - ") + boost::lexical_cast<std::string>(id) + "as output");
+        }
+    }
+}
+//-----------------------------------------------------------------------------
 bool neuro_net::neuron_is_input(uint32_t id) const noexcept
 {
     for( auto neu : m_in_neurons )
@@ -334,6 +360,7 @@ void unlink_neurons(const std::vector<uint32_t>& ids_from,
                     const std::vector<uint32_t>& ids_to
                     ) throw (std::runtime_error)
 {
+    //todo:???
 }
 //-----------------------------------------------------------------------------
 void neuro_net::calc_signal() noexcept

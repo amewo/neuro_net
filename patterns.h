@@ -4,6 +4,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include "states.pb.h"
+
 //-----------------------------------------------------------------------------
 class pattern
 {
@@ -18,6 +20,8 @@ public:
 
     bool set_in(const std::vector<float> in) noexcept;
     bool set_out(const std::vector<float> out) noexcept;
+
+    void save_state(pattern_state *state) noexcept;
 
 protected:
     std::size_t m_in_size;
@@ -39,6 +43,8 @@ public:
 
     pattern& get_pattern(std::size_t indx) throw (std::range_error);
     pattern& operator[](std::size_t indx) throw (std::range_error);
+
+    void save_state(patterns_state *state) noexcept;
 
 protected:
     std::size_t m_in_size;

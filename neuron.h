@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include <vector>
+#include <stdexcept>
+
+#include "states.pb.h"
 
 //-----------------------------------------------------------------------------
 class neuron
@@ -33,6 +36,16 @@ public:
 
     virtual float activation_function(float sum) const noexcept;
 
+    void save_state(neuron_state *state) noexcept;
+
+    // Восстанавливает только значение смещения, суммы и сигнала нейрона.
+    // Возвращает вектор идентификаторов нейронов, которые необходимы для восстановления связей.
+    const std::vector<uint32_t> restore_state(neuron_state *state) noexcept;
+    // Восстанавливает связи нейрона. Принимает состояние нейрона, которое было передано в
+    // метод restore_state и вектор указателей на нейроны, в котором элементы соответстуют элемента
+    // вектора, возвращенного методом restore_state.
+    void restore_links_state(neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error);
+
 protected:
     float m_bias;   // Смещение нейрона.
     float m_sum;    // Взвешенная сумма входных сигналов нейрона.
@@ -40,15 +53,15 @@ protected:
 
     uint32_t m_id;  // Идентификатор нейрона.
 
-    struct neuron_in_link
+    struct neuron_link
     {
-        neuron_in_link(neuron *_neu, float _w) : neu(_neu), w(_w) { }
+        neuron_link(neuron *_neu, float _w) : neu(_neu), w(_w) { }
 
         neuron *neu;
         float   w;
     };
 
-    std::vector<neuron_in_link> m_in_links;
+    std::vector<neuron_link> m_links;
 };
 //-----------------------------------------------------------------------------
 class input_neuron : public neuron

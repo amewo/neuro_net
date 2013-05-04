@@ -1,0 +1,25 @@
+message neuron_link_state
+{
+  required uint32 id = 1;
+  required float w = 2;
+}
+
+message neuron_state
+{
+  required float bias = 1;
+  required float sum = 2;
+  required float signal = 3;
+
+  repeated neuron_link_state links = 4;
+}
+
+message pattern_state
+{
+  repeated float in = 1;
+  repeated float out = 2;
+}
+
+message patterns_state
+{
+  repeated pattern_state patterns = 1;
+}

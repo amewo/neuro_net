@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "neuron.h"
+#include "patterns.h"
 
 //-----------------------------------------------------------------------------
 // Класс нейронной сети.
@@ -49,6 +50,9 @@ public:
 
     bool unmark_neuron_as_input(uint32_t id) noexcept;
     bool unmark_neuron_as_output(uint32_t id) noexcept;
+
+    void mark_neurons_as_input(const std::vector<uint32_t>& ids) throw(std::runtime_error);
+    void mark_neurons_as_output(const std::vector<uint32_t>& ids) throw(std::runtime_error);
 
     bool neuron_is_input(uint32_t id) const noexcept;
     bool neuron_is_output(uint32_t id) const noexcept;
