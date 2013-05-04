@@ -84,6 +84,7 @@ public:
     void calc_signal() noexcept;
 
     void save_state(neuro_net_state *state) const noexcept;
+    void restore_state(const neuro_net_state *state) throw (std::runtime_error);
 
 protected:
     std::vector<neuron*> m_neurons;

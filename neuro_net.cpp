@@ -380,5 +380,20 @@ void neuro_net::save_state(neuro_net_state *state) const noexcept
         neuron_state *neu_state = state->add_neurons();
         neu->save_state(neu_state);
     }
+
+    for( auto neu : m_in_neurons )
+    {
+        state->add_in_neurons_ids(neu->id());
+    }
+
+    for( auto neu : m_out_neurons )
+    {
+        state->add_out_neurons_ids(neu->id());
+    }
+}
+//-----------------------------------------------------------------------------
+void neuro_net::restore_state(const neuro_net_state *state) throw (std::runtime_error)
+{
+    //todo:???
 }
 //-----------------------------------------------------------------------------
