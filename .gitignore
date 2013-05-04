@@ -1,2 +1,6 @@
 *.user
+.*.swp
+*.pb.h
+*.pb.cc
+*.pb.cpp
 
