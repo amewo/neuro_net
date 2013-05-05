@@ -1,10 +1,13 @@
 #include "neuro_net_genetic_training.h"
 
 //-----------------------------------------------------------------------------
-time_stamp_distributor::time_stamp_distributor() noexcept
-    : m_free_link_time_stamp(1)
-    , m_free_node_time_stamp(1)
+time_stamp_distributor::time_stamp_distributor(uint32_t begin_free_node_time_stamp, uint32_t begin_free_link_time_stamp) noexcept
+    : m_begin_free_node_time_stamp(begin_free_node_time_stamp)
+    , m_begin_free_link_time_stamp(begin_free_link_time_stamp)
+    , m_free_node_time_stamp(0)
+    , m_free_link_time_stamp(0)
 {
+    reset();
 }
 //-----------------------------------------------------------------------------
 void time_stamp_distributor::reset() noexcept
@@ -12,8 +15,8 @@ void time_stamp_distributor::reset() noexcept
     m_node_time_stampes.clear();
     m_link_time_stampes.clear();
 
-    m_free_link_time_stamp = 1;
-    m_free_node_time_stamp = 1;
+    m_free_node_time_stamp = m_begin_free_node_time_stamp;
+    m_free_link_time_stamp = m_begin_free_link_time_stamp;
 }
 //-----------------------------------------------------------------------------
 uint32_t time_stamp_distributor::get_time_stamp_for_node(uint32_t link_time_stamp,
@@ -22,20 +25,33 @@ uint32_t time_stamp_distributor::get_time_stamp_for_node(uint32_t link_time_stam
 {
     auto it = m_node_time_stampes.find(link_time_stamp);
 
-    //todo:???
-
     uint32_t node_time_stamp;
 
     if( it == m_node_time_stampes.end() )
     {
+        node_time_stamp_struct _node_time_stamp_struct;
+
         node_time_stamp = m_free_node_time_stamp;
         ++m_free_node_time_stamp;
 
-        m_node_time_stampes[link_time_stamp] = node_time_stamp;
+        link_in_time_stamp = m_free_link_time_stamp;
+        ++m_free_link_time_stamp;
+
+        link_out_time_stamp = m_free_link_time_stamp;
+        ++m_free_link_time_stamp;
+
+        _node_time_stamp_struct.time_stamp = node_time_stamp;
+        _node_time_stamp_struct.link_in_time_stamp = link_in_time_stamp;
+        _node_time_stamp_struct.link_out_time_stamp = link_out_time_stamp;
+
+        m_node_time_stampes[link_time_stamp] = _node_time_stamp_struct;
     }
     else
     {
-        node_time_stamp = it->second;
+        node_time_stamp = it->second.time_stamp;
+
+        link_in_time_stamp = it->second.link_in_time_stamp;
+        link_out_time_stamp = it->second.link_out_time_stamp;
     }
 
     return node_time_stamp;
@@ -77,9 +93,85 @@ uint32_t time_stamp_distributor::get_time_stamp_for_link(uint32_t node_in_time_s
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-population::population(uint32_t size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error)
-    : m_training_patterns(in_signal_size, out_signal_size)
+population::population(uint32_t population_size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error)
+    : m_in_signal_size(in_signal_size)
+    , m_out_signal_size(out_signal_size)
+    , m_training_patterns(in_signal_size, out_signal_size)
+    , m_time_stamp_distributor(in_signal_size + out_signal_size, in_signal_size * out_signal_size)
 {
+    reset(population_size);
+}
+//-----------------------------------------------------------------------------
+void population::reset(uint32_t population_size) noexcept
+{
+    m_time_stamp_distributor.reset();
+    m_individuals.clear();
+
+    for( uint32_t i = 0; i < population_size; ++i )
+    {
+        individual new_individual;
+
+        new_individual.changed = false;
+
+        new_individual.nodes.reserve(m_in_signal_size + m_out_signal_size);
+        new_individual.links.reserve(m_in_signal_size * m_out_signal_size);
+
+        for( uint32_t cur_in_node = 0; i < m_in_signal_size; ++i )
+        {
+            node new_node;
+
+            new_node.activation_func = node_activation_func_type::linear_activation_func;
+            new_node.type = node_type::input_node;
+
+            new_node.time_stamp = cur_in_node;
+
+            new_node.bias = 0.0f;
+            new_node.sum = 0.0f;
+            new_node.signal = 0.0f;
+
+            new_individual.nodes.push_back(new_node);
+        }
+
+        for( uint32_t cur_out_node = m_in_signal_size; i < m_in_signal_size + m_out_signal_size; ++i )
+        {
+            node new_node;
+
+            new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
+            new_node.type = node_type::output_node;
+
+            new_node.time_stamp = cur_out_node;
+
+            new_node.bias = 0.0f;
+            new_node.sum = 0.0f;
+            new_node.signal = 0.0f;
+
+            new_individual.nodes.push_back(new_node);
+        }
+
+        uint32_t link_time_stamp = 0;
+
+        for( uint32_t cur_in_node = 0; i < m_in_signal_size; ++i )
+        {
+            for( uint32_t cur_out_node = m_in_signal_size; i < m_in_signal_size + m_out_signal_size; ++i )
+            {
+                link new_link;
+
+                new_link.time_stamp = link_time_stamp;
+                new_link.in = cur_in_node;
+                new_link.out = cur_out_node;
+
+                new_link.w = 0.0f;
+
+                new_link.enabled = true;
+
+                ++link_time_stamp;
+
+                new_individual.links.push_back(new_link);
+            }
+        }
+
+        m_individuals.push_back(new_individual);
+    }
 }
 //-----------------------------------------------------------------------------
 bool population::set_training_patterns(patterns &ptrns) noexcept

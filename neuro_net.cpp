@@ -99,11 +99,14 @@ uint32_t neuro_net::get_out_size() const noexcept
 //-----------------------------------------------------------------------------
 bool neuro_net::mark_neuron_as_input(uint32_t id) noexcept
 {
-    //todo: добавить проверку по типу нейрона. runtime_cast.
-
     neuron *neu = get_neuron(id);
 
     if( neu == nullptr || neuron_is_input(id) )
+    {
+        return false;
+    }
+
+    if( dynamic_cast<input_neuron*>(neu) == nullptr )
     {
         return false;
     }

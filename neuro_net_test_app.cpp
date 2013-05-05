@@ -6,6 +6,7 @@
 
 #include <neuro_net.h>
 #include <neuron_factory.h>
+#include <neuro_net_genetic_training.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -15,6 +16,7 @@ using namespace std;
 
 int main()
 {
+    /*
     neuro_net nnet;
 
     neuron_factory& neu_factory = neuron_factory::instance();
@@ -79,6 +81,7 @@ int main()
     for( auto val : nnet2.get_output_signals() ) cout << val << endl;
 
     cin.get();
+    */
 
     /*
     bars b;
@@ -88,6 +91,12 @@ int main()
 
     cin.get();
     */
+
+    population pop(320, 10, 2);
+
+    pop.reset(450);
+    pop.reset(450);
+    pop.reset(450);
 
     return 0;
 }

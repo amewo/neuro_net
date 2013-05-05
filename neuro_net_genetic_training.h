@@ -61,7 +61,7 @@ struct individual
 class time_stamp_distributor
 {
 public:
-    time_stamp_distributor() noexcept;
+    time_stamp_distributor(uint32_t begin_free_node_time_stamp, uint32_t begin_link_node_time_stamp) noexcept;
 
     void reset() noexcept;
 
@@ -69,26 +69,37 @@ public:
     uint32_t get_time_stamp_for_link(uint32_t node_in_time_stamp, uint32_t node_out_time_stamp);
 
 protected:
-    struct node_
+    struct node_time_stamp_struct
     {
+        uint32_t time_stamp;
 
+        uint32_t link_in_time_stamp;
+        uint32_t link_out_time_stamp;
     };
 
-    std::map<uint32_t, uint32_t> m_node_time_stampes;
+    std::map<uint32_t, node_time_stamp_struct> m_node_time_stampes;
     std::map<uint32_t, std::map<uint32_t, uint32_t>> m_link_time_stampes;
 
-    uint32_t m_free_link_time_stamp;
+    uint32_t m_begin_free_node_time_stamp;
+    uint32_t m_begin_free_link_time_stamp;
+
     uint32_t m_free_node_time_stamp;
+    uint32_t m_free_link_time_stamp;
 };
 //-----------------------------------------------------------------------------
 class population
 {
 public:
-    population(uint32_t size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error);
+    population(uint32_t population_size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error);
+
+    void reset(uint32_t population_size) noexcept;
 
     bool set_training_patterns(patterns &ptrns) noexcept;
 
 protected:
+    uint32_t m_in_signal_size;
+    uint32_t m_out_signal_size;
+
     patterns                m_training_patterns;
     time_stamp_distributor  m_time_stamp_distributor;
 
