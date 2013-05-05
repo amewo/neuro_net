@@ -123,7 +123,7 @@ pattern& patterns::get(std::size_t indx) throw (std::range_error)
 {
     if( indx >= m_patterns.size() )
     {
-        throw std::range_error("indx > m_patterns.size()");
+        throw std::range_error("indx >= m_patterns.size()");
     }
 
     return m_patterns[indx];
@@ -133,7 +133,7 @@ pattern& patterns::operator[](std::size_t indx) throw (std::range_error)
 {
     if( indx >= m_patterns.size() )
     {
-        throw std::range_error("indx > m_patterns.size()");
+        throw std::range_error("indx >= m_patterns.size()");
     }
 
     return m_patterns[indx];

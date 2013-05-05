@@ -1,8 +1,15 @@
 #include <iostream>
+#include <iomanip>
+#include <ctime>
+
 #include <stdint.h>
 
 #include <neuro_net.h>
 #include <neuron_factory.h>
+
+#include <boost/lexical_cast.hpp>
+
+#include <bars.h>
 
 using namespace std;
 
@@ -61,7 +68,9 @@ int main()
     neuro_net_state state;
     nnet.save_state(&state);
 
-    cout << "load neuron_net state..." << endl;
+    cout << "state size: " << state.ByteSize() << endl;
+
+    cout << "load neuron_net state..." << endl << endl;
 
     neuro_net nnet2;
     nnet2.restore_state(&state);
@@ -70,6 +79,13 @@ int main()
 
     cout << nnet2.get_neuron(5)->signal() << endl;
     cout << nnet2.get_neuron(6)->signal() << endl;
+
+    cin.get();
+
+    bars b;
+    b.load_from_csv("/home/amewo/Documents/neural networks/test.csv");
+
+    cout << "bars count: " << b.get_size() << endl;
 
     cin.get();
 
