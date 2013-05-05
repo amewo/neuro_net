@@ -111,9 +111,9 @@ void population::reset(uint32_t population_size) noexcept
     {
         individual new_individual;
 
-        new_individual.changed = false;
-
         new_individual.nodes.reserve(m_in_signal_size + m_out_signal_size);
+        new_individual.calc_queue.reserve(m_in_signal_size + m_out_signal_size);
+
         new_individual.links.reserve(m_in_signal_size * m_out_signal_size);
 
         for( uint32_t cur_in_node = 0; i < m_in_signal_size; ++i )
@@ -146,6 +146,7 @@ void population::reset(uint32_t population_size) noexcept
             new_node.signal = 0.0f;
 
             new_individual.nodes.push_back(new_node);
+            new_individual.calc_queue.push_back(cur_out_node);
         }
 
         uint32_t link_time_stamp = 0;
