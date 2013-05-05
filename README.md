@@ -11,3 +11,4 @@
  - http://www.forexfactory.com/showthread.php?p=1717926#post1717926
  - http://www.forexfactory.com/showthread.php?t=69699
  - http://www.forexfactory.com/showthread.php?t=71007
+ - тут arryex показывает неплохие результаты торговли по нейронке http://www.trade2win.com/boards/trading-software/85780-build-neural-network-indicator-mt4-using-neuroshell-91.html
