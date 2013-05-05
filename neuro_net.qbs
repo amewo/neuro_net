@@ -15,5 +15,6 @@ DynamicLibrary
             "neuron_factory.h", "neuron_factory.cpp",
             "patterns.h", "patterns.cpp",
             "states.pb.h","states.pb.cpp",
-            "bars.h","bars.cpp"]
+            "bars.h","bars.cpp",
+            "neuro_net_genetic_training.h","neuro_net_genetic_training.cpp"]
 }

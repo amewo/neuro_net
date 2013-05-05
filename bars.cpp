@@ -124,7 +124,7 @@ bool bars::load_from_csv(const std::string& file_name) noexcept
         new_bar.low = boost::lexical_cast<float>(low_price_str);
         new_bar.close = boost::lexical_cast<float>(close_price_str);
 
-        push_back(new_bar);
+        insert(0, new_bar);
     }
 
     scv_file.close();
