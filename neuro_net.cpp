@@ -15,6 +15,16 @@ neuro_net::~neuro_net() noexcept
     }
 }
 //-----------------------------------------------------------------------------
+const std::string& neuro_net::get_name() const noexcept
+{
+    return m_name;
+}
+//-----------------------------------------------------------------------------
+void neuro_net::set_name(const std::string& name) noexcept
+{
+    m_name = name;
+}
+//-----------------------------------------------------------------------------
 bool neuro_net::add_neuron(neuron *neu) noexcept
 {
     auto neu_iter = m_neurons.begin();
@@ -375,6 +385,8 @@ void neuro_net::save_state(neuro_net_state *state) const noexcept
 {
     state->Clear();
 
+    state->set_name(m_name);
+
     for(auto neu : m_neurons)
     {
         neuron_state *neu_state = state->add_neurons();
@@ -394,6 +406,95 @@ void neuro_net::save_state(neuro_net_state *state) const noexcept
 //-----------------------------------------------------------------------------
 void neuro_net::restore_state(const neuro_net_state *state) throw (std::runtime_error)
 {
-    //todo:???
+    for( auto neu : m_neurons )
+    {
+        delete neu;
+    }
+
+    m_neurons.clear();
+
+    m_name = state->name();
+
+    std::vector<std::vector<uint32_t>> neu_links_ids;
+    std::vector<std::vector<neuron*>> neu_links_neus;
+
+    // Файбрика для создания нейронов.
+    neuron_factory& factory = neuron_factory::instance();
+
+    // Сначала восстановим нейроны и их состояния без восстановления связей.
+    for( int i = 0; i < state->neurons_size(); ++i )
+    {
+        const neuron_state& neu_state = state->neurons(i);
+        neuron *neu = factory.create_neuron((neuron_type) neu_state.type(), neu_state.id());
+
+        if( neu == nullptr )
+        {
+            throw std::runtime_error("can't restore neuro_net state - error create neuron");
+        }
+
+        add_neuron(neu);
+        neu_links_ids.push_back(neu->restore_state(&neu_state));
+    }
+
+    // Теперь на основе векторов идентификаторов построим вектор нейронов с соответствующими идернтификаторами.
+    for( auto& links_ids : neu_links_ids )
+    {
+        std::vector<neuron*> links_neus;
+
+        for( auto id : links_ids )
+        {
+            neuron *neu = get_neuron(id);
+
+            if( neu == nullptr )
+            {
+                throw std::runtime_error("can't restore neuro_net state - error get neuron with id " +
+                                         boost::lexical_cast<std::string>(id));
+            }
+
+            links_neus.push_back(neu);
+        }
+
+        neu_links_neus.push_back(links_neus);
+    }
+
+    // Восстановим связи нейронов.
+    for( int i = 0; i < state->neurons_size(); ++i )
+    {
+        const neuron_state& neu_state = state->neurons(i);
+        neuron *neu = get_neuron(neu_state.id());
+
+        neu->restore_links_state(&neu_state, neu_links_neus[i]);
+    }
+
+    restore_input_neurons_state(state);
+    restore_output_neurons_state(state);
+}
+//-----------------------------------------------------------------------------
+void neuro_net::restore_input_neurons_state(const neuro_net_state *state) throw (std::runtime_error)
+{
+    m_in_neurons.clear();
+
+    std::vector<uint32_t> ids;
+
+    for( int i = 0; i < state->in_neurons_ids_size(); ++i )
+    {
+        ids.push_back(state->in_neurons_ids(i));
+    }
+
+    mark_neurons_as_input(ids);
+}
+//-----------------------------------------------------------------------------
+void neuro_net::restore_output_neurons_state(const neuro_net_state *state) throw (std::runtime_error)
+{
+    m_out_neurons.clear();
+
+    std::vector<uint32_t> ids;
+
+    for( int i = 0; i < state->out_neurons_ids_size(); ++i )
+    {
+        ids.push_back(state->out_neurons_ids(i));
+    }
+
+    mark_neurons_as_output(ids);
 }
 //-----------------------------------------------------------------------------

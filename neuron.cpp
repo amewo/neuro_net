@@ -11,6 +11,12 @@ neuron::neuron(uint32_t id) noexcept
 {
 }
 //-----------------------------------------------------------------------------
+neuron::neuron(uint32_t id, neuron_type type) noexcept
+    : neuron(id)
+{
+    m_type = type;
+}
+//-----------------------------------------------------------------------------
 neuron::~neuron() noexcept
 {
 }
@@ -107,6 +113,9 @@ void neuron::save_state(neuron_state *state) noexcept
 {
     state->Clear();
 
+    state->set_type((uint32_t)m_type);
+    state->set_id(m_id);
+
     state->set_bias(m_bias);
     state->set_sum(m_sum);
     state->set_signal(m_signal);
@@ -122,6 +131,9 @@ void neuron::save_state(neuron_state *state) noexcept
 //-----------------------------------------------------------------------------
 std::vector<uint32_t> neuron::restore_state(const neuron_state *state) noexcept
 {
+    m_id = state->id();
+    m_type = (neuron_type) state->type();
+
     m_bias = state->bias();
     m_sum = state->sum();
     m_signal = state->signal();
@@ -163,7 +175,7 @@ void neuron::restore_links_state(const neuron_state *state, const std::vector<ne
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 input_neuron::input_neuron(uint32_t id) noexcept
-    : neuron(id)
+    : neuron(id, neuron_type::input_neuron_type)
 {
 }
 //-----------------------------------------------------------------------------
@@ -179,7 +191,7 @@ float input_neuron::calc_signal() noexcept
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 hyperbolic_neuron::hyperbolic_neuron(uint32_t id) noexcept
-    : neuron(id)
+    : neuron(id, neuron_type::hyperbolic_neuron_type)
 {
 }
 //-----------------------------------------------------------------------------

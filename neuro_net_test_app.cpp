@@ -16,11 +16,11 @@ int main()
     {
         if( i <= 2 )
         {
-            nnet.add_neuron( neu_factory.create_neuron(input_neuron_type, i) );
+            nnet.add_neuron( neu_factory.create_neuron(neuron_type::input_neuron_type, i) );
         }
         else
         {
-            nnet.add_neuron( neu_factory.create_neuron(hyperbolic_neuron_type, i) );
+            nnet.add_neuron( neu_factory.create_neuron(neuron_type::hyperbolic_neuron_type, i) );
         }
     }
 
@@ -53,6 +53,23 @@ int main()
 
     cout << nnet.get_neuron(5)->signal() << endl;
     cout << nnet.get_neuron(6)->signal() << endl;
+
+    cin.get();
+
+    cout << "save neuron_net state..." << endl;
+
+    neuro_net_state state;
+    nnet.save_state(&state);
+
+    cout << "load neuron_net state..." << endl;
+
+    neuro_net nnet2;
+    nnet2.restore_state(&state);
+
+    nnet2.calc_signal();
+
+    cout << nnet2.get_neuron(5)->signal() << endl;
+    cout << nnet2.get_neuron(6)->signal() << endl;
 
     cin.get();
 

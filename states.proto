@@ -6,19 +6,24 @@ message neuron_link_state
 
 message neuron_state
 {
-  required float bias = 1;
-  required float sum = 2;
-  required float signal = 3;
+  required uint32 type = 1;
+  required uint32 id = 2;
 
-  repeated neuron_link_state links = 4;
+  required float bias = 3;
+  required float sum = 4;
+  required float signal = 5;
+
+  repeated neuron_link_state links = 6;
 }
 
 message neuro_net_state
 {
-  repeated neuron_state neurons = 1;
+  required string name = 1;
+
+  repeated neuron_state neurons = 2;
   
-  repeated uint32 in_neurons_ids = 2;
-  repeated uint32 out_neurons_ids = 3;
+  repeated uint32 in_neurons_ids = 3;
+  repeated uint32 out_neurons_ids = 4;
 }
 
 message pattern_state

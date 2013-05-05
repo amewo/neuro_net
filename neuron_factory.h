@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-#include "neuron.h"
+class neuron;
 
 //-----------------------------------------------------------------------------
-enum neuron_type : uint32_t
+enum class neuron_type : uint32_t
 {
     input_neuron_type,
 

@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 
+#include "neuron_factory.h"
 #include "states.pb.h"
 
 //-----------------------------------------------------------------------------
@@ -48,6 +49,10 @@ public:
     virtual void restore_links_state(const neuron_state *state, const std::vector<neuron*> neus) throw(std::runtime_error);
 
 protected:
+    neuron(uint32_t id, neuron_type type) noexcept;
+
+    neuron_type m_type;
+
     float m_bias;   // Смещение нейрона.
     float m_sum;    // Взвешенная сумма входных сигналов нейрона.
     float m_signal; // Рассчитанный сигнал нейрона.

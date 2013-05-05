@@ -29,6 +29,9 @@ public:
 
     neuro_net& operator=(const neuro_net& nnet) = delete;
 
+    const std::string& get_name() const noexcept;
+    void set_name(const std::string& name) noexcept;
+
     // Право владения экземпляром класса нейрона передается экземпляру класса нейронной сети.
     // Добавленный экземпляр класса нейрона будет удален при вызове деструктора нейронной сети.
     bool add_neuron(neuron *neu) noexcept;
@@ -87,6 +90,12 @@ public:
     void restore_state(const neuro_net_state *state) throw (std::runtime_error);
 
 protected:
+    void restore_input_neurons_state(const neuro_net_state *state) throw (std::runtime_error);
+    void restore_output_neurons_state(const neuro_net_state *state) throw (std::runtime_error);
+
+
+    std::string m_name;
+
     std::vector<neuron*> m_neurons;
 
     std::vector<neuron*> m_in_neurons;

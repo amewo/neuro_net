@@ -1,4 +1,5 @@
 #include "neuron_factory.h"
+#include "neuron.h"
 
 neuron_factory::neuron_factory() noexcept
 {
@@ -19,13 +20,13 @@ neuron* neuron_factory::create_neuron(neuron_type type, uint32_t id) noexcept
 {
     switch(type)
     {
-        case input_neuron_type:
+        case neuron_type::input_neuron_type:
             return new input_neuron(id);
 
-        case linear_neuron_type:
+        case neuron_type::linear_neuron_type:
             return new neuron(id);
 
-        case hyperbolic_neuron_type:
+        case neuron_type::hyperbolic_neuron_type:
             return new hyperbolic_neuron(id);
 
         default:

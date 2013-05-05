@@ -39,7 +39,7 @@ public:
     patterns(std::size_t in_size, std::size_t out_size) noexcept;
 
     const std::string& get_name() const noexcept;
-    void set_name(const std::string& get_name) noexcept;
+    void set_name(const std::string& name) noexcept;
 
     std::size_t get_in_size() const noexcept;
     std::size_t get_out_size() const noexcept;
