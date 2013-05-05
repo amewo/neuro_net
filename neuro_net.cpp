@@ -231,6 +231,8 @@ std::vector<uint32_t> neuro_net::get_ids_of_input_neurons() const noexcept
 {
     std::vector<uint32_t> ids;
 
+    ids.reserve(m_in_neurons.size());
+
     for( auto neu : m_in_neurons )
     {
         ids.push_back(neu->id());
@@ -242,6 +244,8 @@ std::vector<uint32_t> neuro_net::get_ids_of_input_neurons() const noexcept
 std::vector<uint32_t> neuro_net::get_ids_of_output_neurons() const noexcept
 {
     std::vector<uint32_t> ids;
+
+    ids.reserve(m_out_neurons.size());
 
     for( auto neu : m_out_neurons )
     {
@@ -366,11 +370,38 @@ bool neuro_net::unlink_neurons(uint32_t id_from, uint32_t id_to) noexcept
     return neu_to->del_link(neu_from);
 }
 //-----------------------------------------------------------------------------
-void unlink_neurons(const std::vector<uint32_t>& ids_from,
+void neuro_net::unlink_neurons(const std::vector<uint32_t>& ids_from,
                     const std::vector<uint32_t>& ids_to
                     ) throw (std::runtime_error)
 {
     //todo:???
+}
+//-----------------------------------------------------------------------------
+void neuro_net::set_input_signal(const std::vector<float> sgnls) throw (std::runtime_error)
+{
+    if( sgnls.size() != m_in_neurons.size() )
+    {
+        throw std::runtime_error("can't set input signals - error size of vector sgnls");
+    }
+
+    for( size_t i = 0; i < sgnls.size(); ++i )
+    {
+        m_in_neurons[i]->set_signal(sgnls[i]);
+    }
+}
+//-----------------------------------------------------------------------------
+const std::vector<float> neuro_net::get_output_signals() const noexcept
+{
+    std::vector<float> out_sgnls;
+
+    out_sgnls.reserve(m_out_neurons.size());
+
+    for( auto neu : m_out_neurons )
+    {
+        out_sgnls.push_back(neu->signal());
+    }
+
+    return out_sgnls;
 }
 //-----------------------------------------------------------------------------
 void neuro_net::calc_signal() noexcept

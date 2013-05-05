@@ -84,6 +84,9 @@ public:
                       const std::vector<uint32_t>& ids_to
                       ) throw (std::runtime_error);
 
+    void set_input_signal(const std::vector<float> sgnls) throw (std::runtime_error);
+    const std::vector<float> get_output_signals() const noexcept;
+
     void calc_signal() noexcept;
 
     void save_state(neuro_net_state *state) const noexcept;
@@ -92,7 +95,6 @@ public:
 protected:
     void restore_input_neurons_state(const neuro_net_state *state) throw (std::runtime_error);
     void restore_output_neurons_state(const neuro_net_state *state) throw (std::runtime_error);
-
 
     std::string m_name;
 

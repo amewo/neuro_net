@@ -35,6 +35,7 @@ public:
     void erase(size_t indx) throw (std::range_error);
 
     bool load_from_csv(const std::string& file_name) noexcept;
+
 protected:
     std::vector<bar> m_bars;
 };

@@ -19,7 +19,7 @@ int main()
 
     neuron_factory& neu_factory = neuron_factory::instance();
 
-    for( uint32_t i = 1; i <= 6; ++i )
+    for( uint32_t i = 6; i >= 1; --i )
     {
         if( i <= 2 )
         {
@@ -53,13 +53,12 @@ int main()
     nnet.link_neurons(ids_from1, ids_to1, 0.38f);
     nnet.link_neurons(ids_to1, ids_to2, 1.73f);
 
-    nnet.get_neuron(1)->set_signal(0.23f);
-    nnet.get_neuron(2)->set_signal(-0.02f);
+    vector<float> in_signals(2, 0.01f);
+    nnet.set_input_signal(in_signals);
 
     nnet.calc_signal();
 
-    cout << nnet.get_neuron(5)->signal() << endl;
-    cout << nnet.get_neuron(6)->signal() << endl;
+    for( auto val : nnet.get_output_signals() ) cout << val << endl;
 
     cin.get();
 
@@ -77,17 +76,18 @@ int main()
 
     nnet2.calc_signal();
 
-    cout << nnet2.get_neuron(5)->signal() << endl;
-    cout << nnet2.get_neuron(6)->signal() << endl;
+    for( auto val : nnet2.get_output_signals() ) cout << val << endl;
 
     cin.get();
 
+    /*
     bars b;
     b.load_from_csv("/home/amewo/Documents/neural networks/test.csv");
 
     cout << "bars count: " << b.get_size() << endl;
 
     cin.get();
+    */
 
     return 0;
 }
