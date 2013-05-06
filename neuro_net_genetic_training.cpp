@@ -116,7 +116,7 @@ void population::reset(uint32_t population_size) noexcept
 
         new_individual.links.reserve(m_in_signal_size * m_out_signal_size);
 
-        for( uint32_t cur_in_node = 0; i < m_in_signal_size; ++i )
+        for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
         {
             node new_node;
 
@@ -132,7 +132,7 @@ void population::reset(uint32_t population_size) noexcept
             new_individual.nodes.push_back(new_node);
         }
 
-        for( uint32_t cur_out_node = m_in_signal_size; i < m_in_signal_size + m_out_signal_size; ++i )
+        for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
         {
             node new_node;
 
@@ -151,9 +151,9 @@ void population::reset(uint32_t population_size) noexcept
 
         uint32_t link_time_stamp = 0;
 
-        for( uint32_t cur_in_node = 0; i < m_in_signal_size; ++i )
+        for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
         {
-            for( uint32_t cur_out_node = m_in_signal_size; i < m_in_signal_size + m_out_signal_size; ++i )
+            for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
             {
                 link new_link;
 
