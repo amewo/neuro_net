@@ -94,6 +94,8 @@ public:
     bool set_training_patterns(patterns &ptrns) noexcept;
 
 protected:
+    void cross_parents(individual& p1, individual& p2, individual &offspring);
+
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;
 

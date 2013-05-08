@@ -189,3 +189,8 @@ bool population::set_training_patterns(patterns &ptrns) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
+void population::cross_parents(individual& p1, individual& p2, individual &offspring)
+{
+
+}
+//-----------------------------------------------------------------------------
