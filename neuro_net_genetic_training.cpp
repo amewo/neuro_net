@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "neuro_net_genetic_training.h"
 
 //-----------------------------------------------------------------------------
@@ -189,8 +191,108 @@ bool population::set_training_patterns(patterns &ptrns) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
-void population::cross_parents(individual& p1, individual& p2, individual &offspring)
+void population::cross_parents(individual& p1, individual& p2, individual &offspring) noexcept
 {
+    offspring.nodes.clear();
+    offspring.links.clear();
+    offspring.calc_queue.clear();
 
+    offspring.nodes.reserve(p1.nodes.size() + p2.nodes.size());
+    offspring.links.reserve(p1.links.size() + p2.links.size());
+    offspring.calc_queue.reserve(p1.calc_queue.size() + p2.calc_queue.size());
+
+    std::vector<size_t> p1nnp, p2nnp; // p1, p2 new nodes pos
+
+    p1nnp.reserve(p1.nodes.size());
+    p2nnp.reserve(p2.nodes.size());
+
+    size_t i = 0, j = 0, nnp = 0;
+
+    while( i < p1.nodes.size() && j < p2.nodes.size() )
+    {
+        if( p1.nodes[i].time_stamp == p2.nodes[j].time_stamp )
+        {
+            p1nnp.push_back(nnp);
+            p2nnp.push_back(nnp);
+
+            offspring.nodes.push_back(p1.nodes[i]);
+            offspring.nodes[nnp].bias = (p1.nodes[i].bias + p2.nodes[j].bias) / 2.0f;
+
+            ++i;
+            ++j;
+            ++nnp;
+        }
+        else
+        {
+            if( p1.nodes[i].time_stamp < p2.nodes[j].time_stamp )
+            {
+                //
+
+                ++i;
+                ++nnp;
+            }
+            else
+            {
+                //
+
+                ++j;
+                ++nnp;
+            }
+        }
+    }
+}
+//-----------------------------------------------------------------------------
+float population::calc_distance_between_parents(individual& p1, individual& p2, float c1, float c2, float c3) noexcept
+{
+    // Формула расстояния между индивидами.
+    // E - число избыточных генов.
+    // D - число непересекающихся генов.
+    // N - размер наибольшего генома.
+
+    float E = p1.links.size() > p2.links.size() ? (p1.links.size() - p2.links.size()) : (p2.links.size() - p1.links.size());
+
+    float D = 0.0f;
+    float Dcnt = 0.0f;
+
+    size_t i = 0;
+    size_t j = 0;
+
+    while( i < p1.links.size() && j < p2.links.size() )
+    {
+        if( p1.links[i].time_stamp == p2.links[j].time_stamp )
+        {
+            D  += std::abs(p1.links[i].w - p2.links[j].w);
+            Dcnt += 1.0f;
+
+            ++i;
+            ++j;
+        }
+        else
+        {
+            D += 1.0f;
+
+            if( p1.links[i].time_stamp < p2.links[j].time_stamp )
+            {
+                ++i;
+            }
+            else
+            {
+                ++j;
+            }
+        }
+    }
+
+    float N = p1.links.size() > p2.links.size() ? p1.links.size() : p2.links.size();
+
+    float avgdw = Dcnt > 0.0f ? (D / Dcnt) : 0.0f;
+
+    float distance = (c1 * E) / N + (c2 * D) / N + c3 * avgdw;
+
+    return distance;
+}
+//-----------------------------------------------------------------------------
+float population::calc_averaged_square_error(individual& ndvdl) noexcept
+{
+    return .0f;
 }
 //-----------------------------------------------------------------------------
