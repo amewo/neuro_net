@@ -19,17 +19,17 @@ std::size_t pattern::get_out_size() const noexcept
     return m_out_size;
 }
 //-----------------------------------------------------------------------------
-const std::vector<float> pattern::get_in() const noexcept
+const std::vector<float>& pattern::get_in() const noexcept
 {
     return m_in;
 }
 //-----------------------------------------------------------------------------
-const std::vector<float> pattern::get_out() const noexcept
+const std::vector<float>& pattern::get_out() const noexcept
 {
     return m_out;
 }
 //-----------------------------------------------------------------------------
-bool pattern::set_in(const std::vector<float> in) noexcept
+bool pattern::set_in(const std::vector<float>& in) noexcept
 {
     if( in.size() != m_in_size )
     {
@@ -41,7 +41,7 @@ bool pattern::set_in(const std::vector<float> in) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
-bool pattern::set_out(const std::vector<float> out) noexcept
+bool pattern::set_out(const std::vector<float>& out) noexcept
 {
     if( out.size() != m_out_size )
     {

@@ -53,6 +53,7 @@ struct individual
 
     // Очередь, в соответствии с которой следует вычислять сигналы узлов.
     std::vector<uint32_t> calc_queue;
+    std::vector<uint32_t> links_queue;
 };
 //-----------------------------------------------------------------------------
 class time_stamp_distributor
@@ -94,9 +95,15 @@ public:
     bool set_training_patterns(patterns &ptrns) noexcept;
 
 protected:
-    void cross_parents(individual& p1, individual& p2, individual &offspring) noexcept;
-    float calc_distance_between_parents(individual& p1, individual& p2, float c1, float c2, float c3) noexcept;
-    float calc_averaged_square_error(individual& ndvdl) noexcept;
+    void  cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
+    float calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
+    float calc_averaged_square_error(const individual& ndvdl) noexcept;
+
+    void  rebuild_links_queue(individual &p) noexcept;
+
+    void  set_input_pattern(const pattern& ptrn, individual& p) noexcept;
+    void  reset_signals(individual& p) noexcept;
+    void  calc_signals(const pattern& ptrn, individual& p) noexcept;
 
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;

@@ -191,7 +191,7 @@ bool population::set_training_patterns(patterns &ptrns) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
-void population::cross_parents(individual& p1, individual& p2, individual &offspring) noexcept
+void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
 {
     offspring.nodes.clear();
     offspring.links.clear();
@@ -201,48 +201,188 @@ void population::cross_parents(individual& p1, individual& p2, individual &offsp
     offspring.links.reserve(p1.links.size() + p2.links.size());
     offspring.calc_queue.reserve(p1.calc_queue.size() + p2.calc_queue.size());
 
-    std::vector<size_t> p1nnp, p2nnp; // p1, p2 new nodes pos
+    std::vector<size_t> p1ngp, p2ngp; // p1, p2 new genes pos
 
-    p1nnp.reserve(p1.nodes.size());
-    p2nnp.reserve(p2.nodes.size());
+    p1ngp.reserve(p1.nodes.size());
+    p2ngp.reserve(p2.nodes.size());
 
-    size_t i = 0, j = 0, nnp = 0;
+    size_t i = 0, j = 0, njp = 0;
 
     while( i < p1.nodes.size() && j < p2.nodes.size() )
     {
         if( p1.nodes[i].time_stamp == p2.nodes[j].time_stamp )
         {
-            p1nnp.push_back(nnp);
-            p2nnp.push_back(nnp);
+            p1ngp.push_back(njp);
+            p2ngp.push_back(njp);
 
             offspring.nodes.push_back(p1.nodes[i]);
-            offspring.nodes[nnp].bias = (p1.nodes[i].bias + p2.nodes[j].bias) / 2.0f;
+            offspring.nodes[njp].bias = (p1.nodes[i].bias + p2.nodes[j].bias) / 2.0f;
 
-            ++i;
-            ++j;
-            ++nnp;
+            ++i, ++j, ++njp;
         }
         else
         {
             if( p1.nodes[i].time_stamp < p2.nodes[j].time_stamp )
             {
-                //
+                p1ngp.push_back(njp);
 
-                ++i;
-                ++nnp;
+                offspring.nodes.push_back(p1.nodes[i]);
+
+                ++i, ++njp;
             }
             else
             {
-                //
+                p2ngp.push_back(njp);
 
-                ++j;
-                ++nnp;
+                offspring.nodes.push_back(p2.nodes[j]);
+
+                ++j, ++njp;
             }
         }
     }
+
+    while( i < p1.nodes.size() )
+    {
+        p1ngp.push_back(njp);
+
+        offspring.nodes.push_back(p1.nodes[i]);
+
+        ++i, ++njp;
+    }
+
+    while( j < p2.nodes.size() )
+    {
+        p2ngp.push_back(njp);
+
+        offspring.nodes.push_back(p2.nodes[j]);
+
+        ++j, ++njp;
+    }
+
+    i = 0, j = 0, njp = 0;
+
+    while( i < p1.links.size() && j < p2.links.size() )
+    {
+        if( p1.links[i].time_stamp == p2.links[j].time_stamp )
+        {
+            offspring.links.push_back(p1.links[i]);
+
+            link& nl = offspring.links[njp];
+
+            nl.w = (p1.links[i].w + p2.links[j].w) / 2.0f;
+
+            nl.in = p1ngp[nl.in];
+            nl.out = p1ngp[nl.out];
+
+            //todo: ???
+            nl.enabled = p1.links[i].enabled || p2.links[j].enabled;
+
+            ++i, ++j, ++njp;
+        }
+        else
+        {
+            if( p1.links[i].time_stamp < p2.links[j].time_stamp )
+            {
+                offspring.links.push_back(p1.links[i]);
+
+                link& nl = offspring.links[njp];
+
+                nl.in = p1ngp[nl.in];
+                nl.out = p1ngp[nl.out];
+
+                ++i, ++njp;
+            }
+            else
+            {
+                offspring.links.push_back(p2.links[j]);
+
+                link& nl = offspring.links[njp];
+
+                nl.in = p2ngp[nl.in];
+                nl.out = p2ngp[nl.out];
+
+                ++j, ++njp;
+            }
+        }
+    }
+
+    while( i < p1.links.size() )
+    {
+        offspring.links.push_back(p1.links[i]);
+
+        link& nl = offspring.links[njp];
+
+        nl.in = p1ngp[nl.in];
+        nl.out = p1ngp[nl.out];
+
+        ++i, ++njp;
+    }
+
+    while( j < p2.links.size() )
+    {
+        offspring.links.push_back(p2.links[j]);
+
+        link& nl = offspring.links[njp];
+
+        nl.in = p2ngp[nl.in];
+        nl.out = p2ngp[nl.out];
+
+        ++j, ++njp;
+    }
+
+    size_t ilst = 0, jlst = 0;
+    i = 0, j = 0, njp = 0;
+
+    while( i < p1.calc_queue.size() && j < p2.calc_queue.size() )
+    {
+        if( p1.nodes[p1.calc_queue[i]].time_stamp == p2.nodes[p2.calc_queue[j]].time_stamp )
+        {
+            for( size_t ii = ilst; ii <= i; ++i )
+            {
+                offspring.calc_queue.push_back( p1ngp[p1.calc_queue[ii]] );
+            }
+
+            for( size_t jj = jlst; jj <= j; ++j )
+            {
+                offspring.calc_queue.push_back( p2ngp[p2.calc_queue[jj]] );
+            }
+
+            ilst = i + 1;
+            jlst = j + 1;
+        }
+        else
+        {
+            if( p1.nodes[p1.calc_queue[i]].time_stamp < p2.nodes[p2.calc_queue[j]].time_stamp )
+            {
+                ++i;
+            }
+            else
+            {
+                ++j;
+            }
+        }
+
+        ++i, ++j;
+    }
+
+    while( ilst < p1.calc_queue.size() )
+    {
+        offspring.calc_queue.push_back(p1ngp[p1.calc_queue[ilst]]);
+
+        ++ilst;
+    }
+
+    while( jlst < p2.calc_queue.size() )
+    {
+        offspring.calc_queue.push_back(p2ngp[p2.calc_queue[jlst]]);
+
+        ++jlst;
+    }
+
+    rebuild_links_queue(offspring);
 }
 //-----------------------------------------------------------------------------
-float population::calc_distance_between_parents(individual& p1, individual& p2, float c1, float c2, float c3) noexcept
+float population::calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept
 {
     // Формула расстояния между индивидами.
     // E - число избыточных генов.
@@ -254,8 +394,7 @@ float population::calc_distance_between_parents(individual& p1, individual& p2, 
     float D = 0.0f;
     float Dcnt = 0.0f;
 
-    size_t i = 0;
-    size_t j = 0;
+    size_t i = 0, j = 0;
 
     while( i < p1.links.size() && j < p2.links.size() )
     {
@@ -291,8 +430,39 @@ float population::calc_distance_between_parents(individual& p1, individual& p2, 
     return distance;
 }
 //-----------------------------------------------------------------------------
-float population::calc_averaged_square_error(individual& ndvdl) noexcept
+float population::calc_averaged_square_error(const individual &ndvdl) noexcept
 {
+    //
+
     return .0f;
+}
+//-----------------------------------------------------------------------------
+void population::rebuild_links_queue(individual &p) noexcept
+{
+    //
+}
+//-----------------------------------------------------------------------------
+void population::set_input_pattern(const pattern& ptrn, individual& p) noexcept
+{
+    const std::vector<float> &in = ptrn.get_in();
+
+    for( size_t i = 0; i < in.size(); ++i )
+    {
+        p.nodes[i].signal = in[i];
+    }
+}
+//-----------------------------------------------------------------------------
+void population::reset_signals(individual& p) noexcept
+{
+    for( node& cur_node: p.nodes )
+    {
+        cur_node.sum = 0.0f;
+        cur_node.signal = 0.0f;
+    }
+}
+//-----------------------------------------------------------------------------
+void population::calc_signals(const pattern &ptrn, individual& p) noexcept
+{
+    //
 }
 //-----------------------------------------------------------------------------

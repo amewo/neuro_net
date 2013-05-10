@@ -16,11 +16,11 @@ public:
     std::size_t get_in_size() const noexcept;
     std::size_t get_out_size() const noexcept;
 
-    const std::vector<float> get_in() const noexcept;
-    const std::vector<float> get_out() const noexcept;
+    const std::vector<float>& get_in() const noexcept;
+    const std::vector<float>& get_out() const noexcept;
 
-    bool set_in(const std::vector<float> in) noexcept;
-    bool set_out(const std::vector<float> out) noexcept;
+    bool set_in(const std::vector<float>& in) noexcept;
+    bool set_out(const std::vector<float>& out) noexcept;
 
     void save_state(pattern_state *state) noexcept;
     void restore_state(const pattern_state *state) noexcept;
