@@ -439,6 +439,9 @@ float population::calc_averaged_square_error(const individual &ndvdl) noexcept
 //-----------------------------------------------------------------------------
 void population::rebuild_links_queue(individual &p) noexcept
 {
+    p.links_queue.clear();
+    p.links_queue.reserve(p.links.size());
+
     //
 }
 //-----------------------------------------------------------------------------
