@@ -1,4 +1,5 @@
 #include <cmath>
+#include <list>
 
 #include "neuro_net_genetic_training.h"
 
@@ -201,12 +202,12 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
     offspring.links.reserve(p1.links.size() + p2.links.size());
     offspring.calc_queue.reserve(p1.calc_queue.size() + p2.calc_queue.size());
 
-    std::vector<size_t> p1ngp, p2ngp; // p1, p2 new genes pos
+    std::vector<uint32_t> p1ngp, p2ngp; // p1, p2 new genes pos
 
     p1ngp.reserve(p1.nodes.size());
     p2ngp.reserve(p2.nodes.size());
 
-    size_t i = 0, j = 0, njp = 0;
+    uint32_t i = 0, j = 0, njp = 0;
 
     while( i < p1.nodes.size() && j < p2.nodes.size() )
     {
@@ -330,19 +331,19 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
         ++j, ++njp;
     }
 
-    size_t ilst = 0, jlst = 0;
+    uint32_t ilst = 0, jlst = 0;
     i = 0, j = 0, njp = 0;
 
     while( i < p1.calc_queue.size() && j < p2.calc_queue.size() )
     {
         if( p1.nodes[p1.calc_queue[i]].time_stamp == p2.nodes[p2.calc_queue[j]].time_stamp )
         {
-            for( size_t ii = ilst; ii <= i; ++i )
+            for( uint32_t ii = ilst; ii <= i; ++i )
             {
                 offspring.calc_queue.push_back( p1ngp[p1.calc_queue[ii]] );
             }
 
-            for( size_t jj = jlst; jj <= j; ++j )
+            for( uint32_t jj = jlst; jj <= j; ++j )
             {
                 offspring.calc_queue.push_back( p2ngp[p2.calc_queue[jj]] );
             }
@@ -394,7 +395,7 @@ float population::calc_distance_between_parents(const individual& p1, const indi
     float D = 0.0f;
     float Dcnt = 0.0f;
 
-    size_t i = 0, j = 0;
+    uint32_t i = 0, j = 0;
 
     while( i < p1.links.size() && j < p2.links.size() )
     {
@@ -442,14 +443,40 @@ void population::rebuild_links_queue(individual &p) noexcept
     p.links_queue.clear();
     p.links_queue.reserve(p.links.size());
 
-    //
+    std::list<uint32_t> left_links;
+
+    for( uint32_t i = 0; i < p.links.size(); ++i )
+    {
+        left_links.push_back(i);
+    }
+
+    for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
+    {
+        auto link_it = left_links.begin();
+
+        while( link_it != left_links.end() )
+        {
+            uint32_t link_num = *link_it;
+
+            if( p.links[link_num].out == p.calc_queue[i] )
+            {
+                p.links_queue.push_back(link_num);
+
+                link_it = left_links.erase(link_it);
+            }
+            else
+            {
+                ++link_it;
+            }
+        }
+    }
 }
 //-----------------------------------------------------------------------------
 void population::set_input_pattern(const pattern& ptrn, individual& p) noexcept
 {
     const std::vector<float> &in = ptrn.get_in();
 
-    for( size_t i = 0; i < in.size(); ++i )
+    for( uint32_t i = 0; i < in.size(); ++i )
     {
         p.nodes[i].signal = in[i];
     }

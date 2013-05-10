@@ -27,13 +27,13 @@ void neuro_net::set_name(const std::string& name) noexcept
 //-----------------------------------------------------------------------------
 bool neuro_net::add_neuron(neuron *neu) noexcept
 {
-    auto neu_iter = m_neurons.begin();
+    auto neu_it = m_neurons.begin();
 
-    while( neu_iter != m_neurons.end() )
+    while( neu_it != m_neurons.end() )
     {
-        if( (*neu_iter)->id() >= neu->id() )
+        if( (*neu_it)->id() >= neu->id() )
         {
-            if( (*neu_iter)->id() == neu->id() )
+            if( (*neu_it)->id() == neu->id() )
             {
                 return false;
             }
@@ -41,34 +41,34 @@ bool neuro_net::add_neuron(neuron *neu) noexcept
             break;
         }
 
-        ++neu_iter;
+        ++neu_it;
     }
 
-    m_neurons.insert(neu_iter, neu);
+    m_neurons.insert(neu_it, neu);
 
     return true;
 }
 //-----------------------------------------------------------------------------
 bool neuro_net::del_neuron(uint32_t id) noexcept
 {
-    auto neu_iter = m_neurons.begin();
+    auto neu_it = m_neurons.begin();
 
-    while( neu_iter != m_neurons.end() )
+    while( neu_it != m_neurons.end() )
     {
-        if( (*neu_iter)->id() == id )
+        if( (*neu_it)->id() == id )
         {
             if( neuron_is_input(id) || neuron_is_output(id) )
             {
                 return false;
             }
 
-            delete (*neu_iter);
-            m_neurons.erase(neu_iter);
+            delete (*neu_it);
+            m_neurons.erase(neu_it);
 
             return true;
         }
 
-        ++neu_iter;
+        ++neu_it;
     }
 
     return false;
@@ -132,18 +132,18 @@ bool neuro_net::mark_neuron_as_output(uint32_t id) noexcept
 //-----------------------------------------------------------------------------
 bool neuro_net::unmark_neuron_as_input(uint32_t id) noexcept
 {
-    auto neu_iter = m_in_neurons.begin();
+    auto neu_it = m_in_neurons.begin();
 
-    while( neu_iter != m_in_neurons.end() )
+    while( neu_it != m_in_neurons.end() )
     {
-        if( (*neu_iter)->id() == id )
+        if( (*neu_it)->id() == id )
         {
-            m_in_neurons.erase(neu_iter);
+            m_in_neurons.erase(neu_it);
 
             return true;
         }
 
-        ++neu_iter;
+        ++neu_it;
     }
 
     return false;
@@ -151,18 +151,18 @@ bool neuro_net::unmark_neuron_as_input(uint32_t id) noexcept
 //-----------------------------------------------------------------------------
 bool neuro_net::unmark_neuron_as_output(uint32_t id) noexcept
 {
-    auto neu_iter = m_out_neurons.begin();
+    auto neu_it = m_out_neurons.begin();
 
-    while( neu_iter != m_out_neurons.end() )
+    while( neu_it != m_out_neurons.end() )
     {
-        if( (*neu_iter)->id() == id )
+        if( (*neu_it)->id() == id )
         {
-            m_out_neurons.erase(neu_iter);
+            m_out_neurons.erase(neu_it);
 
             return true;
         }
 
-        ++neu_iter;
+        ++neu_it;
     }
 
     return false;

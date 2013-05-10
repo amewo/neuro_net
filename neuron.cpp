@@ -68,18 +68,18 @@ bool neuron::add_link(neuron *neu, float w) noexcept
 //-----------------------------------------------------------------------------
 bool neuron::del_link(neuron *neu) noexcept
 {
-    auto link_iter = m_links.begin();
+    auto link_it = m_links.begin();
 
-    while( link_iter != m_links.end() )
+    while( link_it != m_links.end() )
     {
-        if( link_iter->neu == neu )
+        if( link_it->neu == neu )
         {
-            m_links.erase(link_iter);
+            m_links.erase(link_it);
 
             return false;
         }
 
-        ++link_iter;
+        ++link_it;
     }
 
     return false;
