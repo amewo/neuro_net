@@ -94,16 +94,21 @@ public:
 
     bool set_training_patterns(patterns &ptrns) noexcept;
 
+    void make_test() noexcept;
+
 protected:
     void  cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
     float calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
     float calc_averaged_square_error(const individual& ndvdl) noexcept;
 
-    void  rebuild_links_queue(individual &p) noexcept;
+    void  rebuild_links_queue(individual& p) noexcept;
 
     void  set_input_pattern(const pattern& ptrn, individual& p) noexcept;
     void  reset_signals(individual& p) noexcept;
-    void  calc_signals(const pattern& ptrn, individual& p) noexcept;
+    void  calc_signals(individual& p) noexcept;
+
+    void add_node(individual& p, uint32_t link_num) noexcept;
+    void add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
 
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;

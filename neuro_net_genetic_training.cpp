@@ -1,5 +1,7 @@
+#include <iostream>
 #include <cmath>
 #include <list>
+#include <algorithm>
 
 #include "neuro_net_genetic_training.h"
 
@@ -174,6 +176,8 @@ void population::reset(uint32_t population_size) noexcept
             }
         }
 
+        rebuild_links_queue(new_individual);
+
         m_individuals.push_back(new_individual);
     }
 }
@@ -190,6 +194,23 @@ bool population::set_training_patterns(patterns &ptrns) noexcept
     m_training_patterns = ptrns;
 
     return true;
+}
+//-----------------------------------------------------------------------------
+void population::make_test() noexcept
+{
+    individual &ndvdl = m_individuals[0];
+
+    rebuild_links_queue(ndvdl);
+
+    std::vector<float> in(2, 0.1f);
+    pattern ptrn(2, 1);
+    ptrn.set_in(in);
+
+    set_input_pattern(ptrn, ndvdl);
+
+    calc_signals(ndvdl);
+
+    std::cout << calc_distance_between_parents(m_individuals[0], m_individuals[1], 1.0f, 1.0f, 1.0f) << std::endl;
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
@@ -491,7 +512,65 @@ void population::reset_signals(individual& p) noexcept
     }
 }
 //-----------------------------------------------------------------------------
-void population::calc_signals(const pattern &ptrn, individual& p) noexcept
+void population::calc_signals(individual& p) noexcept
+{
+    uint32_t neu_ndx = 0, lnk_ndx = 0;
+
+    while( neu_ndx < p.calc_queue.size() )
+    {
+        node& cur_node = p.nodes[p.calc_queue[neu_ndx]];
+
+        while( lnk_ndx < p.links_queue.size() && p.links[p.links_queue[lnk_ndx]].out == p.calc_queue[neu_ndx] )
+        {
+            link& lnk = p.links[p.links_queue[lnk_ndx]];
+
+            if( lnk.enabled )
+            {
+                cur_node.sum += p.nodes[lnk.in].signal * lnk.w;
+            }
+
+            ++lnk_ndx;
+        }
+
+        if( cur_node.type == node_type::hidden_node ||
+            cur_node.type == node_type::output_node
+          )
+        {
+            switch( cur_node.activation_func )
+            {
+                case node_activation_func_type::linear_activation_func:
+                    cur_node.signal = cur_node.sum;
+                    break;
+                case node_activation_func_type::hyperbolic_activation_func:
+                    cur_node.signal = tanh(cur_node.sum);
+                    break;
+            }
+        }
+
+        ++neu_ndx;
+    }
+}
+//-----------------------------------------------------------------------------
+void population::add_node(individual& p, uint32_t link_num) noexcept
+{
+    link& lnk = p.links[link_num];
+
+    uint32_t new_link_in_time_stamp;
+    uint32_t new_link_out_time_stamp;
+
+    m_time_stamp_distributor.get_time_stamp_for_node(lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
+
+    node new_node;
+    //???
+
+    auto ins_ndx_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), lnk.out);
+
+    lnk.enabled = false;
+
+    //
+}
+//-----------------------------------------------------------------------------
+void population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
     //
 }

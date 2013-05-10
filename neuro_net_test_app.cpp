@@ -92,11 +92,9 @@ int main()
     cin.get();
     */
 
-    population pop(320, 10, 2);
+    population pop(320, 2, 1);
 
-    pop.reset(450);
-    pop.reset(450);
-    pop.reset(450);
+    pop.make_test();
 
     return 0;
 }
