@@ -558,16 +558,65 @@ void population::add_node(individual& p, uint32_t link_num) noexcept
     uint32_t new_link_in_time_stamp;
     uint32_t new_link_out_time_stamp;
 
-    m_time_stamp_distributor.get_time_stamp_for_node(lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
+    uint32_t new_node_time_stamp =
+        m_time_stamp_distributor.get_time_stamp_for_node(lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
 
     node new_node;
-    //???
 
-    auto ins_ndx_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), lnk.out);
+    new_node.time_stamp = new_node_time_stamp;
+
+    new_node.type = node_type::hidden_node;
+    new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
+
+    new_node.bias = 0.0f;
+    new_node.sum = 0.0f;
+    new_node.signal = 0.0f;
+
+    link new_link_in, new_link_out;
+
+    new_link_in.time_stamp = new_link_in_time_stamp;
+    new_link_out.time_stamp = new_link_out_time_stamp;
+
+    new_link_in.w = new_link_out.w = lnk.w;
+    new_link_in.enabled = new_link_out.enabled = true;
+
+    new_link_in.in = lnk.in;
+    new_link_out.in = 0; // ???
+
+    new_link_in.out = 0; // ???
+    new_link_out.out = lnk.out;
+
+    uint32_t ins_ndx = 0;
+
+    while( new_node_time_stamp < p.nodes[ins_ndx].time_stamp && ins_ndx < p.nodes.size() )
+    {
+        ++ins_ndx;
+    }
+
+    for( link& cur_link : p.links )
+    {
+        if( p.nodes[cur_link.in].time_stamp > new_node_time_stamp )
+        {
+            //
+        }
+
+        if( p.nodes[cur_link.out].time_stamp > new_node_time_stamp )
+        {
+            //
+        }
+    }
+
+    for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
+    {
+        //
+    }
+
+    //auto ins_ndx_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), lnk.out);
+    // Обновить очередь нейронов.!!!
 
     lnk.enabled = false;
 
-    //
+    rebuild_links_queue(p);
 }
 //-----------------------------------------------------------------------------
 void population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
