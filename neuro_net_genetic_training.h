@@ -107,8 +107,8 @@ protected:
     void  reset_signals(individual& p) noexcept;
     void  calc_signals(individual& p) noexcept;
 
-    void add_node(individual& p, uint32_t link_num) noexcept;
-    void add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
+    bool add_node(individual& p, uint32_t link_num) noexcept;
+    bool add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
 
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;

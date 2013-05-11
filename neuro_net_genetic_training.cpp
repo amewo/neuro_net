@@ -210,6 +210,8 @@ void population::make_test() noexcept
 
     calc_signals(ndvdl);
 
+    std::cout << "add ok: " << add_node(ndvdl, 0) << std::endl;
+
     std::cout << calc_distance_between_parents(m_individuals[0], m_individuals[1], 1.0f, 1.0f, 1.0f) << std::endl;
 }
 //-----------------------------------------------------------------------------
@@ -551,7 +553,7 @@ void population::calc_signals(individual& p) noexcept
     }
 }
 //-----------------------------------------------------------------------------
-void population::add_node(individual& p, uint32_t link_num) noexcept
+bool population::add_node(individual& p, uint32_t link_num) noexcept
 {
     link& lnk = p.links[link_num];
 
@@ -560,6 +562,16 @@ void population::add_node(individual& p, uint32_t link_num) noexcept
 
     uint32_t new_node_time_stamp =
         m_time_stamp_distributor.get_time_stamp_for_node(lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
+
+    for( node& cur_node : p.nodes )
+    {
+        if( cur_node.time_stamp == new_node_time_stamp )
+        {
+            return false;
+        }
+    }
+
+    lnk.enabled = false;
 
     node new_node;
 
@@ -580,15 +592,9 @@ void population::add_node(individual& p, uint32_t link_num) noexcept
     new_link_in.w = new_link_out.w = lnk.w;
     new_link_in.enabled = new_link_out.enabled = true;
 
-    new_link_in.in = lnk.in;
-    new_link_out.in = 0; // ???
-
-    new_link_in.out = 0; // ???
-    new_link_out.out = lnk.out;
-
     uint32_t ins_ndx = 0;
 
-    while( new_node_time_stamp < p.nodes[ins_ndx].time_stamp && ins_ndx < p.nodes.size() )
+    while( new_node_time_stamp > p.nodes[ins_ndx].time_stamp && ins_ndx < p.nodes.size() )
     {
         ++ins_ndx;
     }
@@ -597,30 +603,136 @@ void population::add_node(individual& p, uint32_t link_num) noexcept
     {
         if( p.nodes[cur_link.in].time_stamp > new_node_time_stamp )
         {
-            //
+            ++cur_link.in;
         }
 
         if( p.nodes[cur_link.out].time_stamp > new_node_time_stamp )
         {
-            //
+            ++cur_link.out;
         }
     }
 
-    for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
+    new_link_in.in = lnk.in;
+    new_link_out.in = ins_ndx;
+
+    new_link_in.out = ins_ndx;
+    new_link_out.out = lnk.out;
+
+    auto ins_link_it = p.links.begin();
+
+    bool new_link_in_inserted = false;
+    bool new_link_out_inserted = false;
+
+    while( ins_link_it != p.links.end() )
     {
-        //
+        if( !new_link_in_inserted && new_link_in.time_stamp < ins_link_it->time_stamp)
+        {
+            ins_link_it = p.links.insert(ins_link_it, new_link_in);
+            new_link_in_inserted = true;
+        }
+
+        if( !new_link_out_inserted && new_link_out.time_stamp < ins_link_it->time_stamp)
+        {
+            ins_link_it = p.links.insert(ins_link_it, new_link_out);
+            new_link_out_inserted = true;
+        }
+
+        ++ins_link_it;
     }
 
-    //auto ins_ndx_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), lnk.out);
-    // Обновить очередь нейронов.!!!
+    if( new_link_in_inserted == false )
+    {
+        if( new_link_out_inserted == false )
+        {
+            if( new_link_in.time_stamp < new_link_out.time_stamp )
+            {
+                p.links.push_back(new_link_in);
+                p.links.push_back(new_link_out);
+            }
+            else
+            {
+                p.links.push_back(new_link_out);
+                p.links.push_back(new_link_in);
+            }
+        }
+        else
+        {
+            p.links.push_back(new_link_in);
+        }
+    }
+    else if( new_link_out_inserted == false )
+    {
+        p.links.push_back(new_link_out);
+    }
 
-    lnk.enabled = false;
+    auto ins_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), ins_ndx);
+
+    for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
+    {
+        if( p.nodes[p.calc_queue[i]].time_stamp > new_node_time_stamp )
+        {
+            ++p.calc_queue[i];
+        }
+    }
+
+    p.nodes.insert(p.nodes.begin() + ins_ndx, new_node);
+
+    p.calc_queue.insert(ins_it, ins_ndx),
 
     rebuild_links_queue(p);
+
+    return true;
 }
 //-----------------------------------------------------------------------------
-void population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
+bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
-    //
+    uint32_t neu_in_time_stamp = p.nodes[neu_in].time_stamp;
+    uint32_t neu_out_time_stamp = p.nodes[neu_out].time_stamp;
+
+    uint32_t new_link_time_stamp = m_time_stamp_distributor.get_time_stamp_for_link(neu_in_time_stamp, neu_out_time_stamp);
+
+    for( link& cur_link : p.links )
+    {
+        if( cur_link.time_stamp == new_link_time_stamp )
+        {
+            return false;
+        }
+    }
+
+    link new_link;
+
+    new_link.time_stamp = new_link_time_stamp;
+
+    new_link.enabled = true;
+
+    new_link.in = neu_in;
+    new_link.out = neu_out;
+
+    new_link.w = 0.0f;
+
+    bool new_link_inserted = false;
+
+    auto ins_it = p.links.begin();
+
+    while( ins_it != p.links.end() )
+    {
+        if( new_link_time_stamp < ins_it->time_stamp )
+        {
+            p.links.insert(ins_it, new_link);
+
+            break;
+        }
+
+        ++ins_it;
+    }
+
+    if( new_link_inserted == false )
+    {
+        p.links.push_back(new_link);
+    }
+
+    rebuild_links_queue(p);
+
+    return true;
 }
 //-----------------------------------------------------------------------------
