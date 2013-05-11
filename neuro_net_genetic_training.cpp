@@ -116,6 +116,9 @@ void population::reset(uint32_t population_size) noexcept
     {
         individual new_individual;
 
+        new_individual.in_signal_size = m_in_signal_size;
+        new_individual.out_signal_size = m_out_signal_size;
+
         new_individual.nodes.reserve(m_in_signal_size + m_out_signal_size);
         new_individual.calc_queue.reserve(m_in_signal_size + m_out_signal_size);
 
@@ -211,6 +214,14 @@ void population::make_test() noexcept
     calc_signals(ndvdl);
 
     std::cout << "add ok: " << add_node(ndvdl, 0) << std::endl;
+
+    calc_signals(ndvdl);
+
+    std::vector<float> v;
+
+    get_output_signal(ndvdl, v);
+
+    for( auto val : v ) std::cout << val << ' '; std::cout << std::endl;
 
     std::cout << calc_distance_between_parents(m_individuals[0], m_individuals[1], 1.0f, 1.0f, 1.0f) << std::endl;
 }
@@ -454,9 +465,22 @@ float population::calc_distance_between_parents(const individual& p1, const indi
     return distance;
 }
 //-----------------------------------------------------------------------------
-float population::calc_averaged_square_error(const individual &ndvdl) noexcept
+float population::calc_averaged_square_error(individual &p) noexcept
 {
-    //
+    reset_signals(p);
+    std::vector<float> out;
+    out.reserve(p.out_signal_size);
+
+    for( uint32_t i = 0; i < m_training_patterns.get_size(); ++i )
+    {
+        pattern& ptrn = m_training_patterns.get(i);
+
+        set_input_pattern(ptrn, p);
+        calc_signals(p);
+        get_output_signal(p, out);
+
+        //
+    }
 
     return .0f;
 }
@@ -550,6 +574,17 @@ void population::calc_signals(individual& p) noexcept
         }
 
         ++neu_ndx;
+    }
+}
+//-----------------------------------------------------------------------------
+void population::get_output_signal(individual& p, std::vector<float>& sgnls) noexcept
+{
+    sgnls.clear();
+    sgnls.reserve(m_out_signal_size);
+
+    for( uint32_t i = m_in_signal_size; i < m_in_signal_size + m_out_signal_size; ++i )
+    {
+        sgnls.push_back(p.nodes[i].signal);
     }
 }
 //-----------------------------------------------------------------------------
