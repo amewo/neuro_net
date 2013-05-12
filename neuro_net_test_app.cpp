@@ -1,20 +1,22 @@
 #include <iostream>
 #include <iomanip>
 #include <ctime>
-
 #include <stdint.h>
+#include <random>
 
 #include <neuro_net.h>
 #include <neuron_factory.h>
 #include <neuro_net_genetic_training.h>
+#include <bars.h>
 
 #include <boost/lexical_cast.hpp>
 
-#include <bars.h>
+#include <QApplication>
+#include <qcp.h>
 
 using namespace std;
 
-int main()
+int main(int argc, char *argv[])
 {
     /*
     neuro_net nnet;
@@ -93,8 +95,55 @@ int main()
     */
 
     population pop(320, 2, 1);
-
     pop.make_test();
 
-    return 0;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis(0, 9);
+    std::uniform_real_distribution<float> dis2(0, 1);
+
+    QApplication a(argc, argv);
+
+    QCustomPlot *customPlot = new QCustomPlot();
+
+    // For simplicity we'll just setup all data and plotting options here
+    // add two new graphs and set their look:
+    customPlot->addGraph();
+    customPlot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+    customPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+    customPlot->addGraph();
+    customPlot->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
+    // generate some points of data (y0 for first, y1 for second graph):
+    QVector<double> x(250), y0(250), y1(250);
+    for (int i=0; i<250; ++i)
+    {
+      x[i] = i;
+      y0[i] = exp(-i/150.0)*cos(i/10.0); // exponentially decaying cosine
+      y1[i] = exp(-i/150.0);             // exponential envelope
+    }
+    // configure right and top axis to show ticks but no labels (could've also just called customPlot->setupFullAxesBox):
+    customPlot->xAxis2->setVisible(true);
+    customPlot->xAxis2->setTickLabels(false);
+    customPlot->yAxis2->setVisible(true);
+    customPlot->yAxis2->setTickLabels(false);
+    // make left and bottom axes always transfer their ranges to right and top axes:
+    QObject::connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    QObject::connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
+    // pass data points to graphs:
+    customPlot->graph(0)->setData(x, y0);
+    customPlot->graph(1)->setData(x, y1);
+    // let the ranges scale themselves so graph 0 fits perfectly in the visible area:
+    customPlot->graph(0)->rescaleAxes();
+    // same thing for graph 1, but only enlarge ranges (in case graph 1 is smaller than graph 0):
+    customPlot->graph(1)->rescaleAxes(true);
+    // Note: we could have also just called customPlot->rescaleAxes(); instead
+    // make range moveable by mouse interaction (click and drag):
+    customPlot->setRangeDrag(Qt::Horizontal | Qt::Vertical);
+    customPlot->setRangeZoom(Qt::Horizontal | Qt::Vertical);
+    customPlot->setInteraction(QCustomPlot::iSelectPlottables); // allow selection of graphs via mouse click
+    customPlot->replot();
+
+    customPlot->show();
+
+    return a.exec();
 }

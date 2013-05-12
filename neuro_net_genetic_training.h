@@ -121,6 +121,12 @@ protected:
     time_stamp_distributor  m_time_stamp_distributor;
 
     std::vector<individual> m_individuals;
+
+    // rates
+    float m_add_node_rate    = 0.01f;
+    float m_add_link_rate    = 0.05f;
+    float m_resete_link_rate = 0.01f;  // Присвоить весу случайное значение из диапазона [-1;1)
+    float m_change_link_rate = 0.10f;  // Изменить вес на случайное значение из диапазона [-0.1;0.1)
 };
 //-----------------------------------------------------------------------------
 
