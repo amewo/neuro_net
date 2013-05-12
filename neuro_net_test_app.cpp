@@ -66,9 +66,9 @@ boost::numeric::ublas::vector<float> compose(boost::numeric::ublas::vector<float
     return res;
 }
 
-boost::numeric::ublas::vector<float> filter(uint32_t lvl, boost::numeric::ublas::vector<float> sig)
+boost::numeric::ublas::vector<float> filter(int lvl, boost::numeric::ublas::vector<float> sig)
 {
-    if(lvl = 0)
+    if(lvl == 0)
     {
         return sig;
     }
@@ -80,7 +80,7 @@ boost::numeric::ublas::vector<float> filter(uint32_t lvl, boost::numeric::ublas:
     {
         sig2(i) = dec(i*2+1);
 
-        if( dec(i*2) < 0.0002f )
+        if( dec(i*2) <= 0.0002f )
         {
             dec(i*2) = 0.0f;
         }
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
         sig2(i) = (b[i].high);
     }
 
-    sig1 = filter(1, sig1);
+    sig1 = filter(2, sig1);
 
 //    boost::numeric::ublas::vector<float> dec1 = decompose(sig1);
 
