@@ -232,7 +232,15 @@ void population::make_test() noexcept
 
     for( auto val : v ) std::cout << val << ' '; std::cout << std::endl;
 
-    std::cout << calc_distance_between_parents(m_individuals[0], m_individuals[1], 1.0f, 1.0f, 1.0f) << std::endl;
+
+    std::cout << "beg split" << std::endl;
+    for( size_t i = 0; i < 1000; ++i )
+    {
+        split_into_species();
+    }
+    std::cout << "end split" << std::endl;
+
+    std::cout << "species num: " << m_species.size() << std::endl;
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
@@ -514,6 +522,11 @@ void population::random_init() noexcept
 //-----------------------------------------------------------------------------
 void population::split_into_species() noexcept
 {
+    for( individual& p : m_individuals )
+    {
+        p.species = 0;
+    }
+
     m_species.clear();
 
     uint32_t frst_ndvdl_ndx = 0, scnd_ndvdl_ndx = 0, free_species = 1;
@@ -533,8 +546,16 @@ void population::split_into_species() noexcept
 
         if( m_individuals[frst_ndvdl_ndx].species == 0 )
         {
+            scnd_ndvdl_ndx = 0;
+
             while( scnd_ndvdl_ndx < m_individuals.size() )
             {
+                if( frst_ndvdl_ndx == scnd_ndvdl_ndx )
+                {
+                    ++scnd_ndvdl_ndx;
+                    continue;
+                }
+
                 individual &scnd_ndvdl = m_individuals[scnd_ndvdl_ndx];
 
                 if( calc_distance_between_parents( frst_ndvdl, scnd_ndvdl, m_c1, m_c2, m_c3) <= m_max_distance_between_species )
@@ -553,7 +574,9 @@ void population::split_into_species() noexcept
 
                     frst_ndvdl.species = scnd_ndvdl.species;
 
-                    m_species[scnd_ndvdl.species - 1].individuals.push_back(frst_ndvdl_ndx);
+                    m_species[frst_ndvdl.species - 1].individuals.push_back(frst_ndvdl_ndx);
+
+                    break;
                 }
 
                 ++scnd_ndvdl_ndx;

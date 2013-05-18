@@ -147,7 +147,7 @@ protected:
     float m_resete_link_rate = 0.01f;  // Присвоить весу случайное значение из диапазона [-1;1)
     float m_change_link_rate = 0.10f;  // Изменить вес на случайное значение из диапазона [-0.1;0.1)
 
-    float m_max_distance_between_species = 2.0f;
+    float m_max_distance_between_species = 1.0f;
 
     float m_c1 = 1.0f;
     float m_c2 = 1.0f;
