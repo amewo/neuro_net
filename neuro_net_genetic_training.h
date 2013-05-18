@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <map>
+#include <random>
 
 #include "patterns.h"
 
@@ -104,6 +105,8 @@ protected:
     float calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
     float calc_averaged_square_error(individual& p) noexcept;
 
+    void  random_init() noexcept;
+
     void  rebuild_links_queue(individual& p) noexcept;
 
     void  set_input_pattern(const pattern& ptrn, individual& p) noexcept;
@@ -121,6 +124,11 @@ protected:
     time_stamp_distributor  m_time_stamp_distributor;
 
     std::vector<individual> m_individuals;
+
+    std::random_device m_random_device;
+    std::mt19937 m_mt19937;
+//    std::uniform_int_distribution<int32_t> dis(-1, 1);
+//    std::uniform_real_distribution<double> dis2(-0.3, 0.3);
 
     // rates
     float m_add_node_rate    = 0.01f;

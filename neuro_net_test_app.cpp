@@ -165,20 +165,14 @@ int main(int argc, char *argv[])
     cin.get();
     */
 
+    population p(1020, 2, 1);
+    p.make_test();
+
+    return 0;
+
+    /*
     bars b;
     b.load_from_csv("/home/amewo/Documents/neural networks/test.csv");
-
-    /*
-    population pop(320, 2, 1);
-    pop.make_test();
-    */
-
-    /*
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int32_t> dis(-1, 1);
-    std::uniform_real_distribution<double> dis2(-0.3, 0.3);
-    */
 
     boost::numeric::ublas::vector<float> sig1(b.get_size() / 20), sig2(b.get_size() / 20);
 
@@ -188,46 +182,10 @@ int main(int argc, char *argv[])
         sig2(i) = (b[i].high);
     }
 
-    sig1 = filter(2, sig1);
-
-//    boost::numeric::ublas::vector<float> dec1 = decompose(sig1);
+    sig1 = filter(3, sig1);
 
     QVector<double> x, y1, y2;
-/*
-    boost::numeric::ublas::vector<float> sig12(dec1.size() / 2);
 
-    for( size_t i = 0; i < sig12.size(); ++i )
-    {
-        sig12(i) = dec1(i*2+1);
-    }
-
-    boost::numeric::ublas::vector<float> dec12 = decompose(sig12);
-
-    for( size_t i = 0; i < dec12.size() / 2; ++i )
-    {
-        if( dec12(i*2) <= 0.0003f )
-        {
-            dec12(i*2) = 0.0f;
-        }
-    }
-
-    sig12 = compose(dec12);
-
-    for( size_t i = 0; i < sig12.size(); ++i )
-    {
-        dec1(i*2+1) = sig12(i);
-    }
-
-    for( size_t i = 0; i < dec1.size() / 2; ++i )
-    {
-        if( std::abs(dec1(i*2)) <= 0.0003f )
-        {
-            dec1(i*2) = 0.0f;
-        }
-    }
-
-    sig1 = compose(dec1);
-*/
     for( size_t i = 0; i < b.get_size() / 20; ++i )
     {
         x.push_back(i);
@@ -271,4 +229,5 @@ int main(int argc, char *argv[])
     customPlot->show();
 
     return a.exec();
+    */
 }

@@ -1,4 +1,4 @@
-#include <iostream>
+    #include <iostream>
 #include <cmath>
 #include <list>
 #include <algorithm>
@@ -103,8 +103,10 @@ population::population(uint32_t population_size, uint32_t in_signal_size, uint32
     , m_out_signal_size(out_signal_size)
     , m_training_patterns(in_signal_size, out_signal_size)
     , m_time_stamp_distributor(in_signal_size + out_signal_size, in_signal_size * out_signal_size)
+    , m_mt19937(m_random_device())
 {
     reset(population_size);
+    random_init();
 }
 //-----------------------------------------------------------------------------
 void population::reset(uint32_t population_size) noexcept
@@ -205,7 +207,7 @@ void population::make_test() noexcept
 
     rebuild_links_queue(ndvdl);
 
-    std::vector<float> in(2, 0.1f);
+    std::vector<float> in(2, 0.13f);
     pattern ptrn(2, 1);
     ptrn.set_in(in);
 
@@ -479,10 +481,28 @@ float population::calc_averaged_square_error(individual &p) noexcept
         calc_signals(p);
         get_output_signal(p, out);
 
-        //
+        ///todo:???
     }
 
     return .0f;
+}
+//-----------------------------------------------------------------------------
+void population::random_init() noexcept
+{
+    std::uniform_real_distribution<float> float_dis(-1.0f, 1.0f);
+
+    for( individual& p : m_individuals )
+    {
+        for( node& pn : p.nodes )
+        {
+            pn.bias = float_dis(m_mt19937);
+        }
+
+        for( link& pl : p.links )
+        {
+            pl.w = float_dis(m_mt19937);
+        }
+    }
 }
 //-----------------------------------------------------------------------------
 void population::rebuild_links_queue(individual &p) noexcept
