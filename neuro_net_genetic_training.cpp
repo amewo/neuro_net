@@ -109,8 +109,13 @@ population::population(uint32_t population_size, uint32_t in_signal_size, uint32
     random_init();
 }
 //-----------------------------------------------------------------------------
-void population::reset(uint32_t population_size) noexcept
+void population::reset(uint32_t population_size) throw(std::runtime_error)
 {
+    if( population_size == 0 )
+    {
+        throw std::runtime_error("population_size == 0");
+    }
+
     m_time_stamp_distributor.reset();
     m_individuals.clear();
 
@@ -125,6 +130,8 @@ void population::reset(uint32_t population_size) noexcept
         new_individual.calc_queue.reserve(m_in_signal_size + m_out_signal_size);
 
         new_individual.links.reserve(m_in_signal_size * m_out_signal_size);
+
+        new_individual.species = 0;
 
         for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
         {
@@ -502,6 +509,58 @@ void population::random_init() noexcept
         {
             pl.w = float_dis(m_mt19937);
         }
+    }
+}
+//-----------------------------------------------------------------------------
+void population::split_into_species() noexcept
+{
+    m_species.clear();
+
+    uint32_t frst_ndvdl_ndx = 0, scnd_ndvdl_ndx = 0, free_species = 1;
+
+    m_individuals[0].species = free_species++; // Поместим первую особь сразу в первый вид.
+
+    species new_species;
+
+    new_species.individuals.push_back(0);
+    new_species.avg_fitness = 0.0f;
+
+    m_species.push_back(new_species);
+
+    while( frst_ndvdl_ndx < m_individuals.size() )
+    {
+        individual &frst_ndvdl = m_individuals[frst_ndvdl_ndx];
+
+        if( m_individuals[frst_ndvdl_ndx].species == 0 )
+        {
+            while( scnd_ndvdl_ndx < m_individuals.size() )
+            {
+                individual &scnd_ndvdl = m_individuals[scnd_ndvdl_ndx];
+
+                if( calc_distance_between_parents( frst_ndvdl, scnd_ndvdl, m_c1, m_c2, m_c3) <= m_max_distance_between_species )
+                {
+                    if( scnd_ndvdl.species == 0 )
+                    {
+                        scnd_ndvdl.species = free_species++;
+
+                        species new_species;
+
+                        new_species.avg_fitness = 0.0f;
+                        new_species.individuals.push_back(scnd_ndvdl_ndx);
+
+                        m_species.push_back(new_species);
+                    }
+
+                    frst_ndvdl.species = scnd_ndvdl.species;
+
+                    m_species[scnd_ndvdl.species - 1].individuals.push_back(frst_ndvdl_ndx);
+                }
+
+                ++scnd_ndvdl_ndx;
+            }
+        }
+
+        ++frst_ndvdl_ndx;
     }
 }
 //-----------------------------------------------------------------------------

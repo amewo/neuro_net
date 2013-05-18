@@ -58,6 +58,15 @@ struct individual
 
     uint32_t in_signal_size;
     uint32_t out_signal_size;
+
+    uint32_t species;
+};
+//-----------------------------------------------------------------------------
+struct species
+{
+    std::vector<uint32_t> individuals;
+
+    float avg_fitness; // Средняя приспособленность особей, принадлежащих данному виду.
 };
 //-----------------------------------------------------------------------------
 class time_stamp_distributor
@@ -94,7 +103,7 @@ class population
 public:
     population(uint32_t population_size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error);
 
-    void reset(uint32_t population_size) noexcept;
+    void reset(uint32_t population_size) throw(std::runtime_error);
 
     bool set_training_patterns(patterns &ptrns) noexcept;
 
@@ -106,6 +115,7 @@ protected:
     float calc_averaged_square_error(individual& p) noexcept;
 
     void  random_init() noexcept;
+    void  split_into_species() noexcept;
 
     void  rebuild_links_queue(individual& p) noexcept;
 
@@ -124,6 +134,7 @@ protected:
     time_stamp_distributor  m_time_stamp_distributor;
 
     std::vector<individual> m_individuals;
+    std::vector<species>    m_species;
 
     std::random_device m_random_device;
     std::mt19937 m_mt19937;
@@ -135,6 +146,12 @@ protected:
     float m_add_link_rate    = 0.05f;
     float m_resete_link_rate = 0.01f;  // Присвоить весу случайное значение из диапазона [-1;1)
     float m_change_link_rate = 0.10f;  // Изменить вес на случайное значение из диапазона [-0.1;0.1)
+
+    float m_max_distance_between_species = 2.0f;
+
+    float m_c1 = 1.0f;
+    float m_c2 = 1.0f;
+    float m_c3 = 1.0f;
 };
 //-----------------------------------------------------------------------------
 
