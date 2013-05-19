@@ -220,11 +220,30 @@ uint32_t population::get_species_num() const noexcept
     return m_species.size();
 }
 //-----------------------------------------------------------------------------
+float population::get_least_error_val() const noexcept
+{
+    return std::min_element(m_individuals.begin(), m_individuals.end(), [](const individual &p1, const individual &p2) {
+        return p1.fitness < p2.fitness;
+    })->fitness;
+}
+//-----------------------------------------------------------------------------
 void population::next_epoch() noexcept
 {
-    do_mutations();
-    calc_all_averaged_square_error();
+    calc_all_fitness();
     split_into_species();
+
+    // Тут проверить условия останова. Если не выполнены, то кроссоверы и мутации.
+    if( false )
+    {
+        return;
+    }
+
+    transfer_best_individuals_from_species();
+    do_mutations();
+    cross_parents_in_species();
+
+    m_individuals = m_temporary_pool;
+    calc_all_fitness();
 }
 //-----------------------------------------------------------------------------
 void population::make_test() noexcept
@@ -384,22 +403,25 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
     uint32_t ilst = 0, jlst = 0;
     i = 0, j = 0, njp = 0;
 
+    //todo: koc9k!!!!
     while( i < p1.calc_queue.size() && j < p2.calc_queue.size() )
     {
         if( p1.nodes[p1.calc_queue[i]].time_stamp == p2.nodes[p2.calc_queue[j]].time_stamp )
         {
-            for( uint32_t ii = ilst; ii <= i; ++i )
+            for( uint32_t ii = ilst; ii <= i; ++ii )
             {
                 offspring.calc_queue.push_back( p1ngp[p1.calc_queue[ii]] );
             }
 
-            for( uint32_t jj = jlst; jj <= j; ++j )
+            for( uint32_t jj = jlst; jj < j; ++jj ) // Последний одинаковый узел не будем добавлять.
             {
                 offspring.calc_queue.push_back( p2ngp[p2.calc_queue[jj]] );
             }
 
             ilst = i + 1;
             jlst = j + 1;
+
+            ++i, ++j;
         }
         else
         {
@@ -412,8 +434,6 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
                 ++j;
             }
         }
-
-        ++i, ++j;
     }
 
     while( ilst < p1.calc_queue.size() )
@@ -481,7 +501,7 @@ float population::calc_distance_between_parents(const individual& p1, const indi
     return distance;
 }
 //-----------------------------------------------------------------------------
-void population::calc_averaged_square_error(individual &p) noexcept
+void population::calc_fitness(individual &p) noexcept
 {
     reset_signals(p);
 
@@ -521,11 +541,11 @@ void population::calc_averaged_square_error(individual &p) noexcept
     p.fitness = e;
 }
 //-----------------------------------------------------------------------------
-void population::calc_all_averaged_square_error() noexcept
+void population::calc_all_fitness() noexcept
 {
     for( individual &p : m_individuals )
     {
-        calc_averaged_square_error(p);
+        calc_fitness(p);
     }
 }
 //-----------------------------------------------------------------------------
@@ -586,9 +606,85 @@ void population::do_mutations() noexcept
 //-----------------------------------------------------------------------------
 void population::transfer_best_individuals_from_species() noexcept
 {
+    m_temporary_pool.clear();
     m_temporary_pool.reserve(m_individuals.size());
 
-    ///
+    // Перенесем лучшую особь каждого вида в следующее поколение.
+    for( species &s : m_species )
+    {
+        m_temporary_pool.push_back( m_individuals[s.individuals[0]] );
+    }
+}
+//-----------------------------------------------------------------------------
+void population::cross_parents_in_species() noexcept
+{
+    float sum_species_adapted_fitness = 0.0f;
+
+    for( species &s : m_species )
+    {
+        s.avg_fitness = 0.0f;
+
+        for( uint32_t i = 0; i < s.individuals.size(); ++i )
+        {
+            s.avg_fitness += m_individuals[s.individuals[i]].fitness;
+        }
+
+        s.avg_fitness = s.avg_fitness / (float) s.individuals.size();
+    }
+
+    float max_fitness = std::max_element(m_species.begin(), m_species.end(), [](const species &s1, const species &s2) {
+        return s1.avg_fitness < s2.avg_fitness;
+    })->avg_fitness;
+
+    std::vector<float> species_adapted_fitness(m_species.size(), 0.0f);
+
+    for( uint32_t i = 0; i < species_adapted_fitness.size(); ++i )
+    {
+        species_adapted_fitness[i] = m_species[i].avg_fitness + max_fitness;
+        sum_species_adapted_fitness += species_adapted_fitness[i];
+    }
+
+    for( uint32_t i = 0; i < species_adapted_fitness.size(); ++i )
+    {
+        m_species[i].number_of_children = (uint32_t ) std::round( (species_adapted_fitness[i] / sum_species_adapted_fitness) *
+                                                                  (float) m_individuals.size() );
+        m_species[i].number_of_children -= 1; // Один ребенок уже есть - это лучшая особь, которую мы перенесли без изменений.
+    }
+
+    for( species &s : m_species )
+    {
+        std::uniform_int_distribution<int32_t> num_parents_dis(0, s.individuals.size() - 1);
+
+        if( s.individuals.size() > 1 )
+        {
+            for(uint32_t i = 0; i < s.number_of_children; ++i)
+            {
+                individual offspring;
+                uint32_t p1ndx, p2ndx;
+
+                while( true )
+                {
+                    p1ndx = num_parents_dis(m_mt19937);
+                    p2ndx = num_parents_dis(m_mt19937);
+
+                    if( p1ndx != p2ndx )
+                    {
+                        break;
+                    }
+                }
+
+                cross_parents(m_individuals[s.individuals[p1ndx]], m_individuals[s.individuals[p2ndx]], offspring);
+                m_temporary_pool.push_back(offspring);
+            }
+        }
+        else
+        {
+            for(uint32_t i = 0; i < s.number_of_children; ++i)
+            {
+                m_temporary_pool.push_back(m_individuals[s.individuals[0]]);
+            }
+        }
+    }
 }
 //-----------------------------------------------------------------------------
 void population::random_init() noexcept
@@ -656,6 +752,7 @@ void population::split_into_species() noexcept
 
                         species new_species;
 
+                        new_species.number_of_children = 0;
                         new_species.avg_fitness = 0.0f;
                         new_species.individuals.push_back(scnd_ndvdl_ndx);
 
@@ -679,6 +776,7 @@ void population::split_into_species() noexcept
 
                 species new_species;
 
+                new_species.number_of_children = 0;
                 new_species.avg_fitness = 0.0f;
                 new_species.individuals.push_back(frst_ndvdl_ndx);
 
@@ -694,15 +792,6 @@ void population::split_into_species() noexcept
         std::sort(s.individuals.begin(), s.individuals.end(), [&](uint32_t a, uint32_t b) {
             return m_individuals[a].fitness < m_individuals[b].fitness;
         });
-
-        s.avg_fitness = 0.0f;
-
-        for( uint32_t i = 0; i < s.individuals.size(); ++i )
-        {
-            s.avg_fitness += m_individuals[s.individuals[i]].fitness;
-        }
-
-        s.avg_fitness = s.avg_fitness / (float) s.individuals.size();
     }
 }
 //-----------------------------------------------------------------------------

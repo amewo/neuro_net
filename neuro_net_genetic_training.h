@@ -68,7 +68,12 @@ struct species
 {
     std::vector<uint32_t> individuals;
 
+    uint32_t number_of_children; // Количество детей, которое будет взято от этого вида.
+                                 // Здесь не учитывается одна лучшая особь, которая переносится без изменений.
     float avg_fitness; // Средняя приспособленность особей, принадлежащих данному виду.
+                       // При выполнении кроссовера данное значение будет перерасчитано и большее значение будет
+                       // соответствовать большей приспособленности, тогда как у отдельного индивидуума
+                       // меньшее значение соответствует меньшей ошибке индивида на обучающей выборке.
 };
 //-----------------------------------------------------------------------------
 class time_stamp_distributor
@@ -111,6 +116,7 @@ public:
 
     uint32_t get_current_epoch() const noexcept;
     uint32_t get_species_num() const noexcept;
+    float    get_least_error_val() const noexcept;
 
     void     next_epoch() noexcept;
 
@@ -119,12 +125,13 @@ public:
 protected:
     void     cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
     float    calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
-    void     calc_averaged_square_error(individual& p) noexcept;
-    void     calc_all_averaged_square_error() noexcept;
+    void     calc_fitness(individual& p) noexcept;
+    void     calc_all_fitness() noexcept;
 
     void     do_mutations() noexcept;
 
     void     transfer_best_individuals_from_species() noexcept;
+    void     cross_parents_in_species() noexcept;
 
     void     random_init() noexcept;
     void     split_into_species() noexcept;
@@ -158,10 +165,10 @@ protected:
     uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
     // rates
-    float m_add_node_rate      = 0.10f;
-    float m_add_link_rate      = 0.20f;
+    float m_add_node_rate      = 0.01f;
+    float m_add_link_rate      = 0.03f;
 
-    float m_change_link_rate   = 0.05f;  // Вероятность изменения веса.
+    float m_change_link_rate   = 0.10f;  // Вероятность изменения веса.
     float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
                                          // в противном случае его значение изменится на число из диапазона [-0.1;0.1).
 

@@ -3,6 +3,7 @@
 #include <ctime>
 #include <stdint.h>
 #include <random>
+#include <cmath>
 
 #include <neuro_net.h>
 #include <neuron_factory.h>
@@ -208,7 +209,7 @@ int main(int argc, char *argv[])
     ptrn.set_out(out);
     ptrns.push_back(ptrn);
 
-    population p(1024, 2, 1);
+    population p(150, 2, 1);
     p.set_training_patterns(ptrns);
 
     //p.make_test();
@@ -217,7 +218,8 @@ int main(int argc, char *argv[])
     for(int i = 0; i < 100; ++i)
     {
         p.next_epoch();
-        std::cout << "i: " << i << "  species num: " << p.get_species_num() << std::endl;
+        std::cout << "i: " << i << "  species num: " << p.get_species_num()
+                  << " least error: " << p.get_least_error_val() << std::endl;
     }
     std::cout << "end" << std::endl;
 
