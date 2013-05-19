@@ -241,6 +241,54 @@ void population::make_test() noexcept
     std::cout << "end split" << std::endl;
 
     std::cout << "species num: " << m_species.size() << std::endl;
+
+    in.clear();
+
+    patterns ptrns(2,1);
+
+    std::vector<float> out;
+
+    in.push_back(0.8f);
+    in.push_back(0.8f);
+    out.push_back(-0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+    in.clear();
+    out.clear();
+
+    in.push_back(-0.8f);
+    in.push_back(-0.8f);
+    out.push_back(-0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+    in.clear();
+    out.clear();
+
+    in.push_back(0.8f);
+    in.push_back(-0.8f);
+    out.push_back(0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+    in.clear();
+    out.clear();
+
+    in.push_back(-0.8f);
+    in.push_back(0.8f);
+    out.push_back(0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+    in.clear();
+    out.clear();
+
+    set_training_patterns(ptrns);
+
+    float error = calc_averaged_square_error(m_individuals[0]);
+
+    std::cout << "error: " << error << std::endl;
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
@@ -485,8 +533,12 @@ float population::calc_distance_between_parents(const individual& p1, const indi
 float population::calc_averaged_square_error(individual &p) noexcept
 {
     reset_signals(p);
+
     std::vector<float> out;
     out.reserve(p.out_signal_size);
+
+    float sum = 0.0f;
+    float n = 0.0f;
 
     for( uint32_t i = 0; i < m_training_patterns.get_size(); ++i )
     {
@@ -496,10 +548,26 @@ float population::calc_averaged_square_error(individual &p) noexcept
         calc_signals(p);
         get_output_signal(p, out);
 
-        ///todo:???
+        const std::vector<float> &ptrn_out = ptrn.get_out();
+
+        float cur_sum = 0.0f;
+        float cur_n = 0.0f;
+
+        for( uint32_t i = 0; i < out.size(); ++i )
+        {
+            cur_sum += (out[i] - ptrn_out[i]) * (out[i] - ptrn_out[i]);
+            cur_n += 1.0f;
+        }
+
+        float cur_e = cur_sum / cur_n;
+
+        sum += cur_e;
+        n += 1.0f;
     }
 
-    return .0f;
+    float e = sum / n;
+
+    return e;
 }
 //-----------------------------------------------------------------------------
 void population::random_init() noexcept

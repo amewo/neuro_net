@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
     cin.get();
     */
 
-    population p(1020, 2, 1);
+    population p(1024, 2, 1);
     p.make_test();
 
     return 0;
