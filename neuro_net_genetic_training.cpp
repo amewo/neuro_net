@@ -425,6 +425,7 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
         }
         else
         {
+            // Косяк тут. В очереди вычисления узлы не упорядочены по временным меткам.
             if( p1.nodes[p1.calc_queue[i]].time_stamp < p2.nodes[p2.calc_queue[j]].time_stamp )
             {
                 ++i;
@@ -653,10 +654,10 @@ void population::cross_parents_in_species() noexcept
 
     for( species &s : m_species )
     {
-        std::uniform_int_distribution<int32_t> num_parents_dis(0, s.individuals.size() - 1);
-
         if( s.individuals.size() > 1 )
         {
+            std::uniform_int_distribution<int32_t> num_parents_dis(0, s.individuals.size() - 1);
+
             for(uint32_t i = 0; i < s.number_of_children; ++i)
             {
                 individual offspring;
@@ -855,6 +856,8 @@ void population::calc_signals(individual& p) noexcept
     while( neu_ndx < p.calc_queue.size() )
     {
         node& cur_node = p.nodes[p.calc_queue[neu_ndx]];
+
+        cur_node.sum = 0.0f;
 
         while( lnk_ndx < p.links_queue.size() && p.links[p.links_queue[lnk_ndx]].out == p.calc_queue[neu_ndx] )
         {
