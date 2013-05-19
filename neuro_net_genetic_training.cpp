@@ -282,7 +282,7 @@ void population::make_test() noexcept
     ptrn.set_out(out);
     ptrns.push_back(ptrn);
     in.clear();
-    out.clear();
+    out.clear();//
 
     set_training_patterns(ptrns);
 
