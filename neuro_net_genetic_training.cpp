@@ -215,9 +215,21 @@ uint32_t population::get_current_epoch() const noexcept
     return m_current_epoch;
 }
 //-----------------------------------------------------------------------------
+uint32_t population::get_species_num() const noexcept
+{
+    return m_species.size();
+}
+//-----------------------------------------------------------------------------
 void population::next_epoch() noexcept
 {
+    do_mutations();
     calc_all_averaged_square_error();
+    split_into_species();
+}
+//-----------------------------------------------------------------------------
+void population::make_test() noexcept
+{
+    add_node(m_individuals[0], 0);
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
@@ -469,7 +481,7 @@ float population::calc_distance_between_parents(const individual& p1, const indi
     return distance;
 }
 //-----------------------------------------------------------------------------
-float population::calc_averaged_square_error(individual &p) noexcept
+void population::calc_averaged_square_error(individual &p) noexcept
 {
     reset_signals(p);
 
@@ -506,7 +518,7 @@ float population::calc_averaged_square_error(individual &p) noexcept
 
     float e = sum / n;
 
-    return e;
+    p.fitness = e;
 }
 //-----------------------------------------------------------------------------
 void population::calc_all_averaged_square_error() noexcept
@@ -570,6 +582,13 @@ void population::do_mutations() noexcept
             add_link(p, num_node_dis(m_mt19937), num_node_dis(m_mt19937));
         }
     }
+}
+//-----------------------------------------------------------------------------
+void population::transfer_best_individuals_from_species() noexcept
+{
+    m_temporary_pool.reserve(m_individuals.size());
+
+    ///
 }
 //-----------------------------------------------------------------------------
 void population::random_init() noexcept
@@ -668,6 +687,22 @@ void population::split_into_species() noexcept
         }
 
         ++frst_ndvdl_ndx;
+    }
+
+    for( species &s : m_species )
+    {
+        std::sort(s.individuals.begin(), s.individuals.end(), [&](uint32_t a, uint32_t b) {
+            return m_individuals[a].fitness < m_individuals[b].fitness;
+        });
+
+        s.avg_fitness = 0.0f;
+
+        for( uint32_t i = 0; i < s.individuals.size(); ++i )
+        {
+            s.avg_fitness += m_individuals[s.individuals[i]].fitness;
+        }
+
+        s.avg_fitness = s.avg_fitness / (float) s.individuals.size();
     }
 }
 //-----------------------------------------------------------------------------
@@ -886,7 +921,7 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
         p.links.push_back(new_link_out);
     }
 
-    auto ins_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), ins_ndx);
+    auto ins_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), new_link_out.out);
 
     for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
     {
@@ -907,6 +942,11 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
 //-----------------------------------------------------------------------------
 bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
+    if( neu_out < m_in_signal_size )
+    {
+        return false;
+    }
+
     uint32_t neu_in_time_stamp = p.nodes[neu_in].time_stamp;
     uint32_t neu_out_time_stamp = p.nodes[neu_out].time_stamp;
 

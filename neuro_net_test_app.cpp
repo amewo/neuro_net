@@ -165,7 +165,61 @@ int main(int argc, char *argv[])
     cin.get();
     */
 
+    patterns ptrns(2, 1);
+
+    std::vector<float> in;
+    std::vector<float> out;
+
+    pattern ptrn(2, 1);
+
+    in.clear();
+    out.clear();
+    in.push_back(0.8f);
+    in.push_back(0.8f);
+    out.push_back(-0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+
+    in.clear();
+    out.clear();
+    in.push_back(-0.8f);
+    in.push_back(-0.8f);
+    out.push_back(-0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+
+    in.clear();
+    out.clear();
+    in.push_back(0.8f);
+    in.push_back(-0.8f);
+    out.push_back(0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+
+    in.clear();
+    out.clear();
+    in.push_back(-0.8f);
+    in.push_back(0.8f);
+    out.push_back(0.8f);
+    ptrn.set_in(in);
+    ptrn.set_out(out);
+    ptrns.push_back(ptrn);
+
     population p(1024, 2, 1);
+    p.set_training_patterns(ptrns);
+
+    //p.make_test();
+
+    std::cout << "beg" << std::endl;
+    for(int i = 0; i < 100; ++i)
+    {
+        p.next_epoch();
+        std::cout << "i: " << i << "  species num: " << p.get_species_num() << std::endl;
+    }
+    std::cout << "end" << std::endl;
 
     return 0;
 

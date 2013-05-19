@@ -59,6 +59,8 @@ struct individual
     uint32_t in_signal_size;
     uint32_t out_signal_size;
 
+    float fitness;
+
     uint32_t species;
 };
 //-----------------------------------------------------------------------------
@@ -106,16 +108,23 @@ public:
     void     reset(uint32_t population_size) throw(std::runtime_error);
 
     bool     set_training_patterns(patterns &ptrns) noexcept;
+
     uint32_t get_current_epoch() const noexcept;
+    uint32_t get_species_num() const noexcept;
+
     void     next_epoch() noexcept;
+
+    void     make_test() noexcept;
 
 protected:
     void     cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
     float    calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
-    float    calc_averaged_square_error(individual& p) noexcept;
+    void     calc_averaged_square_error(individual& p) noexcept;
     void     calc_all_averaged_square_error() noexcept;
 
     void     do_mutations() noexcept;
+
+    void     transfer_best_individuals_from_species() noexcept;
 
     void     random_init() noexcept;
     void     split_into_species() noexcept;
@@ -137,6 +146,8 @@ protected:
     time_stamp_distributor  m_time_stamp_distributor;
 
     std::vector<individual> m_individuals;
+    std::vector<individual> m_temporary_pool;
+
     std::vector<species>    m_species;
 
     std::random_device m_random_device;
@@ -147,8 +158,8 @@ protected:
     uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
     // rates
-    float m_add_node_rate      = 0.01f;
-    float m_add_link_rate      = 0.05f;
+    float m_add_node_rate      = 0.10f;
+    float m_add_link_rate      = 0.20f;
 
     float m_change_link_rate   = 0.05f;  // Вероятность изменения веса.
     float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
