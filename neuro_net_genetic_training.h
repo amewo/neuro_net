@@ -103,29 +103,32 @@ class population
 public:
     population(uint32_t population_size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error);
 
-    void reset(uint32_t population_size) throw(std::runtime_error);
+    void     reset(uint32_t population_size) throw(std::runtime_error);
 
-    bool set_training_patterns(patterns &ptrns) noexcept;
-
-    void make_test() noexcept;
+    bool     set_training_patterns(patterns &ptrns) noexcept;
+    uint32_t get_current_epoch() const noexcept;
+    void     next_epoch() noexcept;
 
 protected:
-    void  cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
-    float calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
-    float calc_averaged_square_error(individual& p) noexcept;
+    void     cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
+    float    calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
+    float    calc_averaged_square_error(individual& p) noexcept;
+    void     calc_all_averaged_square_error() noexcept;
 
-    void  random_init() noexcept;
-    void  split_into_species() noexcept;
+    void     do_mutations() noexcept;
 
-    void  rebuild_links_queue(individual& p) noexcept;
+    void     random_init() noexcept;
+    void     split_into_species() noexcept;
 
-    void  set_input_pattern(const pattern& ptrn, individual& p) noexcept;
-    void  reset_signals(individual& p) noexcept;
-    void  calc_signals(individual& p) noexcept;
-    void  get_output_signal(individual& p, std::vector<float>& sgnls) noexcept;
+    void     rebuild_links_queue(individual& p) noexcept;
 
-    bool  add_node(individual& p, uint32_t link_num) noexcept;
-    bool  add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
+    void     set_input_pattern(const pattern& ptrn, individual& p) noexcept;
+    void     reset_signals(individual& p) noexcept;
+    void     calc_signals(individual& p) noexcept;
+    void     get_output_signal(individual& p, std::vector<float>& sgnls) noexcept;
+
+    bool     add_node(individual& p, uint32_t link_num) noexcept;
+    bool     add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
 
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;
@@ -141,13 +144,19 @@ protected:
 //    std::uniform_int_distribution<int32_t> dis(-1, 1);
 //    std::uniform_real_distribution<double> dis2(-0.3, 0.3);
 
-    // rates
-    float m_add_node_rate    = 0.01f;
-    float m_add_link_rate    = 0.05f;
-    float m_resete_link_rate = 0.01f;  // Присвоить весу случайное значение из диапазона [-1;1)
-    float m_change_link_rate = 0.10f;  // Изменить вес на случайное значение из диапазона [-0.1;0.1)
+    uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
-    float m_max_distance_between_species = 1.0f;
+    // rates
+    float m_add_node_rate      = 0.01f;
+    float m_add_link_rate      = 0.05f;
+
+    float m_change_link_rate   = 0.05f;  // Вероятность изменения веса.
+    float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
+                                         // в противном случае его значение изменится на число из диапазона [-0.1;0.1).
+
+    float m_enable_weight_rate = 0.50f;
+
+    float m_max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
 
     float m_c1 = 1.0f;
     float m_c2 = 1.0f;

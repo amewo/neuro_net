@@ -1,4 +1,4 @@
-    #include <iostream>
+#include <iostream>
 #include <cmath>
 #include <list>
 #include <algorithm>
@@ -119,6 +119,8 @@ void population::reset(uint32_t population_size) throw(std::runtime_error)
     m_time_stamp_distributor.reset();
     m_individuals.clear();
 
+    m_current_epoch = 0;
+
     for( uint32_t i = 0; i < population_size; ++i )
     {
         individual new_individual;
@@ -208,91 +210,20 @@ bool population::set_training_patterns(patterns &ptrns) noexcept
     return true;
 }
 //-----------------------------------------------------------------------------
-void population::make_test() noexcept
+uint32_t population::get_current_epoch() const noexcept
 {
-    individual &ndvdl = m_individuals[0];
-
-    rebuild_links_queue(ndvdl);
-
-    std::vector<float> in(2, 0.13f);
-    pattern ptrn(2, 1);
-    ptrn.set_in(in);
-
-    set_input_pattern(ptrn, ndvdl);
-
-    calc_signals(ndvdl);
-
-    std::cout << "add ok: " << add_node(ndvdl, 0) << std::endl;
-
-    calc_signals(ndvdl);
-
-    std::vector<float> v;
-
-    get_output_signal(ndvdl, v);
-
-    for( auto val : v ) std::cout << val << ' '; std::cout << std::endl;
-
-
-    std::cout << "beg split" << std::endl;
-    for( size_t i = 0; i < 1000; ++i )
-    {
-        split_into_species();
-    }
-    std::cout << "end split" << std::endl;
-
-    std::cout << "species num: " << m_species.size() << std::endl;
-
-    in.clear();
-
-    patterns ptrns(2,1);
-
-    std::vector<float> out;
-
-    in.push_back(0.8f);
-    in.push_back(0.8f);
-    out.push_back(-0.8f);
-    ptrn.set_in(in);
-    ptrn.set_out(out);
-    ptrns.push_back(ptrn);
-    in.clear();
-    out.clear();
-
-    in.push_back(-0.8f);
-    in.push_back(-0.8f);
-    out.push_back(-0.8f);
-    ptrn.set_in(in);
-    ptrn.set_out(out);
-    ptrns.push_back(ptrn);
-    in.clear();
-    out.clear();
-
-    in.push_back(0.8f);
-    in.push_back(-0.8f);
-    out.push_back(0.8f);
-    ptrn.set_in(in);
-    ptrn.set_out(out);
-    ptrns.push_back(ptrn);
-    in.clear();
-    out.clear();
-
-    in.push_back(-0.8f);
-    in.push_back(0.8f);
-    out.push_back(0.8f);
-    ptrn.set_in(in);
-    ptrn.set_out(out);
-    ptrns.push_back(ptrn);
-    in.clear();
-    out.clear();//
-
-    set_training_patterns(ptrns);
-
-    float error = calc_averaged_square_error(m_individuals[0]);
-
-    std::cout << "error: " << error << std::endl;
+    return m_current_epoch;
+}
+//-----------------------------------------------------------------------------
+void population::next_epoch() noexcept
+{
+    calc_all_averaged_square_error();
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
 {
+    std::uniform_real_distribution<float> rate_dis(0.0f, 1.0f);
+
     offspring.nodes.clear();
     offspring.links.clear();
     offspring.calc_queue.clear();
@@ -374,8 +305,16 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
             nl.in = p1ngp[nl.in];
             nl.out = p1ngp[nl.out];
 
-            //todo: ???
-            nl.enabled = p1.links[i].enabled || p2.links[j].enabled;
+            if( p1.links[i].enabled && p2.links[j].enabled )
+            {
+                nl.enabled = true;
+            }
+            else if( p1.links[i].enabled || p2.links[j].enabled )
+            {
+                // Если у одного из родителей всеже включен ген веса,
+                // то включим его в потомке с вероятностью m_enable_weight_rate.
+                nl.enabled = ( rate_dis(m_mt19937) < m_enable_weight_rate ) ? true : false;
+            }
 
             ++i, ++j, ++njp;
         }
@@ -570,6 +509,69 @@ float population::calc_averaged_square_error(individual &p) noexcept
     return e;
 }
 //-----------------------------------------------------------------------------
+void population::calc_all_averaged_square_error() noexcept
+{
+    for( individual &p : m_individuals )
+    {
+        calc_averaged_square_error(p);
+    }
+}
+//-----------------------------------------------------------------------------
+void population::do_mutations() noexcept
+{
+    std::uniform_real_distribution<float>  rate_dis(0.0f, 1.0f);
+
+    std::uniform_real_distribution<float>  reset_weight_dis(-1.0f, 1.0f);
+    std::uniform_real_distribution<float>  change_weight_dis(-0.1f, 0.1f);
+
+    for( individual &p : m_individuals )
+    {
+        for( node &cur_node : p.nodes )
+        {
+            if( rate_dis(m_mt19937) < m_change_link_rate )
+            {
+                if( rate_dis(m_mt19937) < m_resete_link_rate )
+                {
+                    cur_node.bias = reset_weight_dis(m_mt19937);
+                }
+                else
+                {
+                    cur_node.bias += change_weight_dis(m_mt19937);
+                }
+            }
+        }
+
+        for( link &cur_link : p.links )
+        {
+            if( rate_dis(m_mt19937) < m_change_link_rate )
+            {
+                if( rate_dis(m_mt19937) < m_resete_link_rate )
+                {
+                    cur_link.w = reset_weight_dis(m_mt19937);
+                }
+                else
+                {
+                    cur_link.w += change_weight_dis(m_mt19937);
+                }
+            }
+        }
+
+        if( rate_dis(m_mt19937) < m_add_node_rate )
+        {
+            std::uniform_int_distribution<int32_t> num_link_dis(0, p.links.size() - 1);
+
+            add_node(p, num_link_dis(m_mt19937));
+        }
+
+        if( rate_dis(m_mt19937) < m_add_link_rate )
+        {
+            std::uniform_int_distribution<int32_t> num_node_dis(0, 1);
+
+            add_link(p, num_node_dis(m_mt19937), num_node_dis(m_mt19937));
+        }
+    }
+}
+//-----------------------------------------------------------------------------
 void population::random_init() noexcept
 {
     std::uniform_real_distribution<float> float_dis(-1.0f, 1.0f);
@@ -614,6 +616,7 @@ void population::split_into_species() noexcept
 
         if( m_individuals[frst_ndvdl_ndx].species == 0 )
         {
+            bool placed = false;
             scnd_ndvdl_ndx = 0;
 
             while( scnd_ndvdl_ndx < m_individuals.size() )
@@ -644,10 +647,23 @@ void population::split_into_species() noexcept
 
                     m_species[frst_ndvdl.species - 1].individuals.push_back(frst_ndvdl_ndx);
 
+                    placed = true;
                     break;
                 }
 
                 ++scnd_ndvdl_ndx;
+            }
+
+            if( placed == false )
+            {
+                frst_ndvdl.species = free_species++;
+
+                species new_species;
+
+                new_species.avg_fitness = 0.0f;
+                new_species.individuals.push_back(frst_ndvdl_ndx);
+
+                m_species.push_back(new_species);
             }
         }
 

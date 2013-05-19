@@ -166,7 +166,6 @@ int main(int argc, char *argv[])
     */
 
     population p(1024, 2, 1);
-    p.make_test();
 
     return 0;
 
