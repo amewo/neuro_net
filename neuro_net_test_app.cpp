@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <random>
 #include <cmath>
+#include <algorithm>
 
 #include <neuro_net.h>
 #include <neuron_factory.h>
@@ -211,8 +212,6 @@ int main(int argc, char *argv[])
 
     population p(150, 2, 1);
     p.set_training_patterns(ptrns);
-
-    //p.make_test();
 
     std::cout << "beg" << std::endl;
     for(int i = 0; i < 100; ++i)

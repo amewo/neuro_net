@@ -124,9 +124,12 @@ public:
 
 protected:
     void     cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
+
     float    calc_distance_between_parents(const individual& p1, const individual& p2, float c1, float c2, float c3) noexcept;
     void     calc_fitness(individual& p) noexcept;
     void     calc_all_fitness() noexcept;
+
+    bool     check_calc_queue(const individual& p);
 
     void     do_mutations() noexcept;
 
@@ -165,16 +168,16 @@ protected:
     uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
     // rates
-    float m_add_node_rate      = 0.01f;
-    float m_add_link_rate      = 0.03f;
+    float m_add_node_rate      = 0.05f;
+    float m_add_link_rate      = 0.20f;
 
     float m_change_link_rate   = 0.10f;  // Вероятность изменения веса.
     float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
-                                         // в противном случае его значение изменится на число из диапазона [-0.1;0.1).
+                                         // в противном случае его значение изменится на число из диапазона [-1.0;1.0).
 
-    float m_enable_weight_rate = 0.50f;
+    float m_enable_weight_rate = 0.01f;
 
-    float m_max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
+    float m_max_distance_between_species = 3.0f; // Максимальное расстояние между особями одного вида.
 
     float m_c1 = 1.0f;
     float m_c2 = 1.0f;

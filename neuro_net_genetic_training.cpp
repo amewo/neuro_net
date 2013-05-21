@@ -229,6 +229,8 @@ float population::get_least_error_val() const noexcept
 //-----------------------------------------------------------------------------
 void population::next_epoch() noexcept
 {
+    ++m_current_epoch;
+
     calc_all_fitness();
     split_into_species();
 
@@ -263,6 +265,9 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
     offspring.links.reserve(p1.links.size() + p2.links.size());
     offspring.calc_queue.reserve(p1.calc_queue.size() + p2.calc_queue.size());
 
+    offspring.in_signal_size = m_in_signal_size;
+    offspring.out_signal_size = m_out_signal_size;
+
     std::vector<uint32_t> p1ngp, p2ngp; // p1, p2 new genes pos
 
     p1ngp.reserve(p1.nodes.size());
@@ -278,7 +283,15 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
             p2ngp.push_back(njp);
 
             offspring.nodes.push_back(p1.nodes[i]);
-            offspring.nodes[njp].bias = (p1.nodes[i].bias + p2.nodes[j].bias) / 2.0f;
+
+            if( rate_dis(m_mt19937) < 0.5f )
+            {
+                offspring.nodes[njp].bias = p1.nodes[i].bias;
+            }
+            else
+            {
+                offspring.nodes[njp].bias = p2.nodes[j].bias;
+            }
 
             ++i, ++j, ++njp;
         }
@@ -331,7 +344,14 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
 
             link& nl = offspring.links[njp];
 
-            nl.w = (p1.links[i].w + p2.links[j].w) / 2.0f;
+            if( rate_dis(m_mt19937) < 0.5f )
+            {
+                nl.w = p1.links[i].w;
+            }
+            else
+            {
+                nl.w = p2.links[j].w;
+            }
 
             nl.in = p1ngp[nl.in];
             nl.out = p1ngp[nl.out];
@@ -400,55 +420,102 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
         ++j, ++njp;
     }
 
-    uint32_t ilst = 0, jlst = 0;
-    i = 0, j = 0, njp = 0;
+    uint32_t jj = 0;
+    i = 0, j = 0;
 
-    //todo: koc9k!!!!
     while( i < p1.calc_queue.size() && j < p2.calc_queue.size() )
     {
-        if( p1.nodes[p1.calc_queue[i]].time_stamp == p2.nodes[p2.calc_queue[j]].time_stamp )
+        uint32_t ii = i;
+
+        bool found = false;
+
+        while( ii < p1.calc_queue.size() )
         {
-            for( uint32_t ii = ilst; ii <= i; ++ii )
+            jj = j;
+
+            while( jj < p2.calc_queue.size() )
             {
-                offspring.calc_queue.push_back( p1ngp[p1.calc_queue[ii]] );
+                if( p1.nodes[p1.calc_queue[ii]].time_stamp == p2.nodes[p2.calc_queue[jj]].time_stamp )
+                {
+                    found = true;
+                    break;
+                }
+
+                ++jj;
             }
 
-            for( uint32_t jj = jlst; jj < j; ++jj ) // Последний одинаковый узел не будем добавлять.
+            if( found == true )
             {
-                offspring.calc_queue.push_back( p2ngp[p2.calc_queue[jj]] );
+                break;
             }
 
-            ilst = i + 1;
-            jlst = j + 1;
-
-            ++i, ++j;
+            ++ii;
         }
-        else
+
+        if( found == false )
         {
-            // Косяк тут. В очереди вычисления узлы не упорядочены по временным меткам.
-            if( p1.nodes[p1.calc_queue[i]].time_stamp < p2.nodes[p2.calc_queue[j]].time_stamp )
+            break;
+        }
+
+        while( i < ii )
+        {
+            offspring.calc_queue.push_back(p1ngp[p1.calc_queue[i]]);
+
+            ++i;
+        }
+
+        while( j < jj )
+        {
+            offspring.calc_queue.push_back(p2ngp[p2.calc_queue[j]]);
+
+            ++j;
+        }
+
+        // Добавим в очередь только один одинаковый узел.
+        offspring.calc_queue.push_back(p1ngp[p1.calc_queue[ii]]);
+
+        ++i, ++j;
+    }
+
+    while( i < p1.calc_queue.size() )
+    {
+        offspring.calc_queue.push_back(p1ngp[p1.calc_queue[i]]);
+
+        ++i;
+    }
+
+    while( j < p2.calc_queue.size() )
+    {
+        offspring.calc_queue.push_back(p2ngp[p2.calc_queue[j]]);
+
+        ++j;
+    }
+
+    // Удалим одинаковые элементы из очереди.
+    auto it1 = offspring.calc_queue.begin();
+
+    while( it1 != offspring.calc_queue.end() )
+    {
+        auto it2 = it1 + 1;
+
+        while( it2 != offspring.calc_queue.end() )
+        {
+            if( *it1 == *it2 )
             {
-                ++i;
+                it2 = offspring.calc_queue.erase(it2);
+            }
+
+            if( it2 != offspring.calc_queue.end() )
+            {
+                ++it2;
             }
             else
             {
-                ++j;
+                break;
             }
         }
-    }
 
-    while( ilst < p1.calc_queue.size() )
-    {
-        offspring.calc_queue.push_back(p1ngp[p1.calc_queue[ilst]]);
-
-        ++ilst;
-    }
-
-    while( jlst < p2.calc_queue.size() )
-    {
-        offspring.calc_queue.push_back(p2ngp[p2.calc_queue[jlst]]);
-
-        ++jlst;
+        ++it1;
     }
 
     rebuild_links_queue(offspring);
@@ -550,12 +617,19 @@ void population::calc_all_fitness() noexcept
     }
 }
 //-----------------------------------------------------------------------------
+bool population::check_calc_queue(const individual& p)
+{
+    auto it = p.calc_queue.end() - 1;
+
+    return *it == 2;
+}
+//-----------------------------------------------------------------------------
 void population::do_mutations() noexcept
 {
     std::uniform_real_distribution<float>  rate_dis(0.0f, 1.0f);
 
     std::uniform_real_distribution<float>  reset_weight_dis(-1.0f, 1.0f);
-    std::uniform_real_distribution<float>  change_weight_dis(-0.1f, 0.1f);
+    std::uniform_real_distribution<float>  change_weight_dis(-2.0f, 2.0f);
 
     for( individual &p : m_individuals )
     {
@@ -903,13 +977,18 @@ void population::get_output_signal(individual& p, std::vector<float>& sgnls) noe
 //-----------------------------------------------------------------------------
 bool population::add_node(individual& p, uint32_t link_num) noexcept
 {
+    if( check_calc_queue(p) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
     link& lnk = p.links[link_num];
 
-    uint32_t new_link_in_time_stamp;
-    uint32_t new_link_out_time_stamp;
+    uint32_t new_link_in_time_stamp = 0;
+    uint32_t new_link_out_time_stamp = 0;
 
-    uint32_t new_node_time_stamp =
-        m_time_stamp_distributor.get_time_stamp_for_node(lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
+    uint32_t new_node_time_stamp = m_time_stamp_distributor.get_time_stamp_for_node(
+                                       lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
 
     for( node& cur_node : p.nodes )
     {
@@ -928,7 +1007,9 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
     new_node.type = node_type::hidden_node;
     new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
 
-    new_node.bias = 0.0f;
+    std::uniform_real_distribution<float>  weight_dis(-1.0f, 1.0f);
+
+    new_node.bias = weight_dis(m_mt19937);
     new_node.sum = 0.0f;
     new_node.signal = 0.0f;
 
@@ -1013,8 +1094,6 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
         p.links.push_back(new_link_out);
     }
 
-    auto ins_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), new_link_out.out);
-
     for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
     {
         if( p.nodes[p.calc_queue[i]].time_stamp > new_node_time_stamp )
@@ -1023,22 +1102,24 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
         }
     }
 
+    auto ins_it = std::find(p.calc_queue.begin(), p.calc_queue.end(), new_link_out.out);
+
     p.nodes.insert(p.nodes.begin() + ins_ndx, new_node);
 
     p.calc_queue.insert(ins_it, ins_ndx),
 
     rebuild_links_queue(p);
 
+    if( check_calc_queue(p) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
     return true;
 }
 //-----------------------------------------------------------------------------
 bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
-    if( neu_out < m_in_signal_size )
-    {
-        return false;
-    }
-
     uint32_t neu_in_time_stamp = p.nodes[neu_in].time_stamp;
     uint32_t neu_out_time_stamp = p.nodes[neu_out].time_stamp;
 
@@ -1061,7 +1142,9 @@ bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noex
     new_link.in = neu_in;
     new_link.out = neu_out;
 
-    new_link.w = 0.0f;
+    std::uniform_real_distribution<float>  weight_dis(-1.0f, 1.0f);
+
+    new_link.w = weight_dis(m_mt19937);
 
     bool new_link_inserted = false;
 
