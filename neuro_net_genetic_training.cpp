@@ -244,7 +244,27 @@ void population::next_epoch() noexcept
     do_mutations();
     cross_parents_in_species();
 
-    m_individuals = m_temporary_pool;
+    std::swap(m_individuals, m_temporary_pool);
+    // todo: потому изменить
+    calc_all_fitness();
+}
+//-----------------------------------------------------------------------------
+void population::next_epoch_without_species() noexcept
+{
+    ++m_current_epoch;
+
+    calc_all_fitness();
+
+    // Тут проверить условия останова. Если не выполнены, то кроссоверы и мутации.
+    if( false )
+    {
+        return;
+    }
+
+    //Тут мутации, кросоверы и всякое такое.
+
+    std::swap(m_individuals, m_temporary_pool);
+    // todo: потому изменить
     calc_all_fitness();
 }
 //-----------------------------------------------------------------------------
@@ -629,7 +649,7 @@ void population::do_mutations() noexcept
     std::uniform_real_distribution<float>  rate_dis(0.0f, 1.0f);
 
     std::uniform_real_distribution<float>  reset_weight_dis(-1.0f, 1.0f);
-    std::uniform_real_distribution<float>  change_weight_dis(-2.0f, 2.0f);
+    std::uniform_real_distribution<float>  change_weight_dis(-1.0f, 1.0f);
 
     for( individual &p : m_individuals )
     {
@@ -1120,6 +1140,11 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
 //-----------------------------------------------------------------------------
 bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
+    if( neu_out <= m_in_signal_size )
+    {
+        return false;
+    }
+
     uint32_t neu_in_time_stamp = p.nodes[neu_in].time_stamp;
     uint32_t neu_out_time_stamp = p.nodes[neu_out].time_stamp;
 

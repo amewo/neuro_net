@@ -119,6 +119,7 @@ public:
     float    get_least_error_val() const noexcept;
 
     void     next_epoch() noexcept;
+    void     next_epoch_without_species() noexcept;
 
     void     make_test() noexcept;
 
@@ -168,20 +169,20 @@ protected:
     uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
     // rates
-    float m_add_node_rate      = 0.05f;
-    float m_add_link_rate      = 0.20f;
+    float m_add_node_rate      = 0.01f;
+    float m_add_link_rate      = 0.75f;
 
-    float m_change_link_rate   = 0.10f;  // Вероятность изменения веса.
+    float m_change_link_rate   = 0.30f;  // Вероятность изменения веса.
     float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
                                          // в противном случае его значение изменится на число из диапазона [-1.0;1.0).
 
-    float m_enable_weight_rate = 0.01f;
+    float m_enable_weight_rate = 0.5f;
 
-    float m_max_distance_between_species = 3.0f; // Максимальное расстояние между особями одного вида.
+    float m_max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
 
     float m_c1 = 1.0f;
     float m_c2 = 1.0f;
-    float m_c3 = 1.0f;
+    float m_c3 = 0.0f;
 };
 //-----------------------------------------------------------------------------
 

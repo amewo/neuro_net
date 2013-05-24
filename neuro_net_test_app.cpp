@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     p.set_training_patterns(ptrns);
 
     std::cout << "beg" << std::endl;
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 200; ++i)
     {
         p.next_epoch();
         std::cout << "i: " << i << "  species num: " << p.get_species_num()
