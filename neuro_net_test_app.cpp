@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
     std::cout << "beg" << std::endl;
     for(int i = 0; i < 200; ++i)
     {
-        p.next_epoch();
+        p.next_epoch_without_species();
         std::cout << "i: " << i << "  species num: " << p.get_species_num()
                   << " least error: " << p.get_least_error_val() << std::endl;
     }

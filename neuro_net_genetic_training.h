@@ -159,7 +159,7 @@ protected:
     std::vector<individual> m_individuals;
     std::vector<individual> m_temporary_pool;
 
-    std::vector<uint32_t>   m_;
+    std::vector<uint32_t>   m_sorted_individuals_ndxes;
 
     std::vector<species>    m_species;
 

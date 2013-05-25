@@ -261,7 +261,22 @@ void population::next_epoch_without_species() noexcept
         return;
     }
 
-    //
+    m_sorted_individuals_ndxes.clear();
+    m_sorted_individuals_ndxes.reserve(m_individuals.size());
+
+    for( uint32_t i = 0; i < m_individuals.size(); ++i )
+    {
+        m_sorted_individuals_ndxes.push_back(i);
+    }
+
+    std::sort(m_sorted_individuals_ndxes.begin(), m_sorted_individuals_ndxes.end(), [&](uint32_t ndx1, uint32_t ndx2) {
+        return m_individuals[ndx1].fitness < m_individuals[ndx2].fitness;
+    });
+
+    // Теперь в m_sorted_individuals_ndxes хранятся индексы особей, которые упорядочены в порядке
+    // уменьшения приспособленнойсти особи (увеличение среднеквадратической ошибки).
+    // Переместим сначала 5% лучших особей без изменения в новое поколение.
+    uint32_t best_individuals_num = m_individuals.size() / 100 * 5;
 
     std::swap(m_individuals, m_temporary_pool);
     // todo: потому изменить
