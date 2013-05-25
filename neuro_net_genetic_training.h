@@ -159,6 +159,8 @@ protected:
     std::vector<individual> m_individuals;
     std::vector<individual> m_temporary_pool;
 
+    std::vector<uint32_t>   m_;
+
     std::vector<species>    m_species;
 
     std::random_device m_random_device;

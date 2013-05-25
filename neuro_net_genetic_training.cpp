@@ -261,7 +261,7 @@ void population::next_epoch_without_species() noexcept
         return;
     }
 
-    //Тут мутации, кросоверы и всякое такое.
+    //
 
     std::swap(m_individuals, m_temporary_pool);
     // todo: потому изменить
