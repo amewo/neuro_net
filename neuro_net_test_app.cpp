@@ -214,10 +214,12 @@ int main(int argc, char *argv[])
     p.set_training_patterns(ptrns);
 
     std::cout << "beg" << std::endl;
-    for(int i = 0; i < 200; ++i)
+    for(int i = 0; i < 300; ++i)
     {
-        p.next_epoch_without_species();
-        std::cout << "i: " << i << "  species num: " << p.get_species_num()
+        p.next_epoch();
+        std::cout << "i: " << i
+                  << " species num: " << p.get_species_num()
+                  << " nodes in best: " << p.get_nodes_num_in_best()
                   << " least error: " << p.get_least_error_val() << std::endl;
     }
     std::cout << "end" << std::endl;

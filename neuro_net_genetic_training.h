@@ -60,8 +60,6 @@ struct individual
     uint32_t out_signal_size;
 
     float fitness;
-
-    uint32_t species;
 };
 //-----------------------------------------------------------------------------
 struct species
@@ -105,23 +103,59 @@ protected:
     uint32_t m_free_link_time_stamp;
 };
 //-----------------------------------------------------------------------------
+struct population_params
+{
+    float add_node_rate      = 0.01f;
+    float add_link_rate      = 0.05f;
+
+    float change_link_rate   = 0.30f;  // Вероятность изменения веса.
+    float resete_link_rate   = 0.01f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
+                                       // в противном случае его значение изменится на число из диапазона [-1.0;1.0).
+
+    float cross_rate         = 0.50f;
+
+    float enable_link_rate   = 0.75f;
+
+    float max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
+
+    float c1 = 1.0f;
+    float c2 = 1.0f;
+    float c3 = 0.0f;
+
+    float reset_weight_down  = -1.0f;
+    float reset_weight_up    = 1.0f;
+
+    float change_weight_down = -1.0f;
+    float change_weight_up   = 1.0f;
+
+    uint32_t species_num        = 30;
+    float    distance_up_step   = 0.1f;
+    float    distance_down_step = 0.1f;
+};
+//-----------------------------------------------------------------------------
 class population
 {
 public:
     population(uint32_t population_size, uint32_t in_signal_size, uint32_t out_signal_size) throw(std::runtime_error);
 
+    void     set_params(const population_params &params) noexcept;
+    const population_params& get_params() const noexcept;
+
     void     reset(uint32_t population_size) throw(std::runtime_error);
+    void     reset_individual(individual &p) throw(std::runtime_error);
 
     bool     set_training_patterns(patterns &ptrns) noexcept;
 
     uint32_t get_current_epoch() const noexcept;
     uint32_t get_species_num() const noexcept;
     float    get_least_error_val() const noexcept;
+    uint32_t get_nodes_num_in_best() const noexcept;
 
     void     next_epoch() noexcept;
-    void     next_epoch_without_species() noexcept;
 
     void     make_test() noexcept;
+
+    bool     check_links(const individual &p) noexcept;
 
 protected:
     void     cross_parents(const individual& p1, const individual& p2, individual &offspring) noexcept;
@@ -130,15 +164,13 @@ protected:
     void     calc_fitness(individual& p) noexcept;
     void     calc_all_fitness() noexcept;
 
-    bool     check_calc_queue(const individual& p);
-
     void     do_mutations() noexcept;
 
     void     transfer_best_individuals_from_species() noexcept;
     void     cross_parents_in_species() noexcept;
 
-    void     random_init() noexcept;
     void     split_into_species() noexcept;
+    void     correct_max_distance_between_species() noexcept;
 
     void     rebuild_links_queue(individual& p) noexcept;
 
@@ -159,8 +191,6 @@ protected:
     std::vector<individual> m_individuals;
     std::vector<individual> m_temporary_pool;
 
-    std::vector<uint32_t>   m_sorted_individuals_ndxes;
-
     std::vector<species>    m_species;
 
     std::random_device m_random_device;
@@ -170,21 +200,7 @@ protected:
 
     uint32_t m_current_epoch; // Текущая эпоха алгоритма.
 
-    // rates
-    float m_add_node_rate      = 0.01f;
-    float m_add_link_rate      = 0.75f;
-
-    float m_change_link_rate   = 0.30f;  // Вероятность изменения веса.
-    float m_resete_link_rate   = 0.10f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
-                                         // в противном случае его значение изменится на число из диапазона [-1.0;1.0).
-
-    float m_enable_weight_rate = 0.5f;
-
-    float m_max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
-
-    float m_c1 = 1.0f;
-    float m_c2 = 1.0f;
-    float m_c3 = 0.0f;
+    population_params m_params;
 };
 //-----------------------------------------------------------------------------
 

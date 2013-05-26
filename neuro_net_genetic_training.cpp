@@ -106,7 +106,16 @@ population::population(uint32_t population_size, uint32_t in_signal_size, uint32
     , m_mt19937(m_random_device())
 {
     reset(population_size);
-    random_init();
+}
+//-----------------------------------------------------------------------------
+void population::set_params(const population_params &params) noexcept
+{
+    m_params = params;
+}
+//-----------------------------------------------------------------------------
+const population_params& population::get_params() const noexcept
+{
+    return m_params;
 }
 //-----------------------------------------------------------------------------
 void population::reset(uint32_t population_size) throw(std::runtime_error)
@@ -124,76 +133,89 @@ void population::reset(uint32_t population_size) throw(std::runtime_error)
     for( uint32_t i = 0; i < population_size; ++i )
     {
         individual new_individual;
-
-        new_individual.in_signal_size = m_in_signal_size;
-        new_individual.out_signal_size = m_out_signal_size;
-
-        new_individual.nodes.reserve(m_in_signal_size + m_out_signal_size);
-        new_individual.calc_queue.reserve(m_in_signal_size + m_out_signal_size);
-
-        new_individual.links.reserve(m_in_signal_size * m_out_signal_size);
-
-        new_individual.species = 0;
-
-        for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
-        {
-            node new_node;
-
-            new_node.activation_func = node_activation_func_type::linear_activation_func;
-            new_node.type = node_type::input_node;
-
-            new_node.time_stamp = cur_in_node;
-
-            new_node.bias = 0.0f;
-            new_node.sum = 0.0f;
-            new_node.signal = 0.0f;
-
-            new_individual.nodes.push_back(new_node);
-        }
-
-        for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
-        {
-            node new_node;
-
-            new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
-            new_node.type = node_type::output_node;
-
-            new_node.time_stamp = cur_out_node;
-
-            new_node.bias = 0.0f;
-            new_node.sum = 0.0f;
-            new_node.signal = 0.0f;
-
-            new_individual.nodes.push_back(new_node);
-            new_individual.calc_queue.push_back(cur_out_node);
-        }
-
-        uint32_t link_time_stamp = 0;
-
-        for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
-        {
-            for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
-            {
-                link new_link;
-
-                new_link.time_stamp = link_time_stamp;
-                new_link.in = cur_in_node;
-                new_link.out = cur_out_node;
-
-                new_link.w = 0.0f;
-
-                new_link.enabled = true;
-
-                ++link_time_stamp;
-
-                new_individual.links.push_back(new_link);
-            }
-        }
-
-        rebuild_links_queue(new_individual);
-
+        reset_individual(new_individual);
         m_individuals.push_back(new_individual);
     }
+}
+//-----------------------------------------------------------------------------
+void population::reset_individual(individual &p) throw(std::runtime_error)
+{
+    p.in_signal_size = m_in_signal_size;
+    p.out_signal_size = m_out_signal_size;
+
+    p.nodes.reserve(m_in_signal_size + m_out_signal_size);
+    p.calc_queue.reserve(m_in_signal_size + m_out_signal_size);
+
+    p.links.reserve(m_in_signal_size * m_out_signal_size);
+
+    for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
+    {
+        node new_node;
+
+        new_node.activation_func = node_activation_func_type::linear_activation_func;
+        new_node.type = node_type::input_node;
+
+        new_node.time_stamp = cur_in_node;
+
+        new_node.bias = 0.0f;
+        new_node.sum = 0.0f;
+        new_node.signal = 0.0f;
+
+        p.nodes.push_back(new_node);
+    }
+
+    for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
+    {
+        node new_node;
+
+        new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
+        new_node.type = node_type::output_node;
+
+        new_node.time_stamp = cur_out_node;
+
+        new_node.bias = 0.0f;
+        new_node.sum = 0.0f;
+        new_node.signal = 0.0f;
+
+        p.nodes.push_back(new_node);
+        p.calc_queue.push_back(cur_out_node);
+    }
+
+    uint32_t link_time_stamp = 0;
+
+    for( uint32_t cur_in_node = 0; cur_in_node < m_in_signal_size; ++cur_in_node )
+    {
+        for( uint32_t cur_out_node = m_in_signal_size; cur_out_node < m_in_signal_size + m_out_signal_size; ++cur_out_node )
+        {
+            link new_link;
+
+            new_link.time_stamp = link_time_stamp;
+            new_link.in = cur_in_node;
+            new_link.out = cur_out_node;
+
+            new_link.w = 0.0f;
+
+            new_link.enabled = true;
+
+            ++link_time_stamp;
+
+            p.links.push_back(new_link);
+        }
+    }
+
+    std::uniform_real_distribution<float> float_dis(-1.0f, 1.0f);
+
+    for( node& pn : p.nodes )
+    {
+        pn.bias = float_dis(m_mt19937);
+    }
+
+    for( link& pl : p.links )
+    {
+        pl.w = float_dis(m_mt19937);
+    }
+
+    rebuild_links_queue(p);
 }
 //-----------------------------------------------------------------------------
 bool population::set_training_patterns(patterns &ptrns) noexcept
@@ -222,9 +244,26 @@ uint32_t population::get_species_num() const noexcept
 //-----------------------------------------------------------------------------
 float population::get_least_error_val() const noexcept
 {
+    if( m_individuals.size() == 0 )
+    {
+        return 0.0f;
+    }
+
     return std::min_element(m_individuals.begin(), m_individuals.end(), [](const individual &p1, const individual &p2) {
         return p1.fitness < p2.fitness;
     })->fitness;
+}
+//-----------------------------------------------------------------------------
+uint32_t population::get_nodes_num_in_best() const noexcept
+{
+    if( m_individuals.size() == 0 )
+    {
+        return 0;
+    }
+
+    return std::min_element(m_individuals.begin(), m_individuals.end(), [](const individual &p1, const individual &p2) {
+        return p1.fitness < p2.fitness;
+    })->nodes.size();
 }
 //-----------------------------------------------------------------------------
 void population::next_epoch() noexcept
@@ -233,6 +272,7 @@ void population::next_epoch() noexcept
 
     calc_all_fitness();
     split_into_species();
+    correct_max_distance_between_species();
 
     // Тут проверить условия останова. Если не выполнены, то кроссоверы и мутации.
     if( false )
@@ -245,41 +285,7 @@ void population::next_epoch() noexcept
     cross_parents_in_species();
 
     std::swap(m_individuals, m_temporary_pool);
-    // todo: потому изменить
-    calc_all_fitness();
-}
-//-----------------------------------------------------------------------------
-void population::next_epoch_without_species() noexcept
-{
-    ++m_current_epoch;
 
-    calc_all_fitness();
-
-    // Тут проверить условия останова. Если не выполнены, то кроссоверы и мутации.
-    if( false )
-    {
-        return;
-    }
-
-    m_sorted_individuals_ndxes.clear();
-    m_sorted_individuals_ndxes.reserve(m_individuals.size());
-
-    for( uint32_t i = 0; i < m_individuals.size(); ++i )
-    {
-        m_sorted_individuals_ndxes.push_back(i);
-    }
-
-    std::sort(m_sorted_individuals_ndxes.begin(), m_sorted_individuals_ndxes.end(), [&](uint32_t ndx1, uint32_t ndx2) {
-        return m_individuals[ndx1].fitness < m_individuals[ndx2].fitness;
-    });
-
-    // Теперь в m_sorted_individuals_ndxes хранятся индексы особей, которые упорядочены в порядке
-    // уменьшения приспособленнойсти особи (увеличение среднеквадратической ошибки).
-    // Переместим сначала 5% лучших особей без изменения в новое поколение.
-    uint32_t best_individuals_num = m_individuals.size() / 100 * 5;
-
-    std::swap(m_individuals, m_temporary_pool);
-    // todo: потому изменить
     calc_all_fitness();
 }
 //-----------------------------------------------------------------------------
@@ -288,8 +294,37 @@ void population::make_test() noexcept
     add_node(m_individuals[0], 0);
 }
 //-----------------------------------------------------------------------------
+bool population::check_links(const individual &p) noexcept
+{
+    for( uint32_t i = 0; i < p.links.size(); ++i )
+    {
+        for( uint32_t j = 0; j < p.links.size(); ++j )
+        {
+            if( i != j )
+            {
+                if( p.links[i].time_stamp == p.links[j].time_stamp )
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+//-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
 {
+    if( check_links(p1) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
+    if( check_links(p2) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
     std::uniform_real_distribution<float> rate_dis(0.0f, 1.0f);
 
     offspring.nodes.clear();
@@ -399,7 +434,7 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
             {
                 // Если у одного из родителей всеже включен ген веса,
                 // то включим его в потомке с вероятностью m_enable_weight_rate.
-                nl.enabled = ( rate_dis(m_mt19937) < m_enable_weight_rate ) ? true : false;
+                nl.enabled = ( rate_dis(m_mt19937) < m_params.enable_link_rate ) ? true : false;
             }
 
             ++i, ++j, ++njp;
@@ -553,6 +588,16 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
         ++it1;
     }
 
+    if( check_links(p1) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
+    if( check_links(p2) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
     rebuild_links_queue(offspring);
 }
 //-----------------------------------------------------------------------------
@@ -652,27 +697,20 @@ void population::calc_all_fitness() noexcept
     }
 }
 //-----------------------------------------------------------------------------
-bool population::check_calc_queue(const individual& p)
-{
-    auto it = p.calc_queue.end() - 1;
-
-    return *it == 2;
-}
-//-----------------------------------------------------------------------------
 void population::do_mutations() noexcept
 {
     std::uniform_real_distribution<float>  rate_dis(0.0f, 1.0f);
 
-    std::uniform_real_distribution<float>  reset_weight_dis(-1.0f, 1.0f);
-    std::uniform_real_distribution<float>  change_weight_dis(-1.0f, 1.0f);
+    std::uniform_real_distribution<float>  reset_weight_dis(m_params.reset_weight_down, m_params.reset_weight_up);
+    std::uniform_real_distribution<float>  change_weight_dis(m_params.change_weight_down, m_params.change_weight_up);
 
     for( individual &p : m_individuals )
     {
         for( node &cur_node : p.nodes )
         {
-            if( rate_dis(m_mt19937) < m_change_link_rate )
+            if( rate_dis(m_mt19937) < m_params.change_link_rate )
             {
-                if( rate_dis(m_mt19937) < m_resete_link_rate )
+                if( rate_dis(m_mt19937) < m_params.resete_link_rate )
                 {
                     cur_node.bias = reset_weight_dis(m_mt19937);
                 }
@@ -685,29 +723,32 @@ void population::do_mutations() noexcept
 
         for( link &cur_link : p.links )
         {
-            if( rate_dis(m_mt19937) < m_change_link_rate )
+            if( cur_link.enabled == true )
             {
-                if( rate_dis(m_mt19937) < m_resete_link_rate )
+                if( rate_dis(m_mt19937) < m_params.change_link_rate )
                 {
-                    cur_link.w = reset_weight_dis(m_mt19937);
-                }
-                else
-                {
-                    cur_link.w += change_weight_dis(m_mt19937);
+                    if( rate_dis(m_mt19937) < m_params.resete_link_rate )
+                    {
+                        cur_link.w = reset_weight_dis(m_mt19937);
+                    }
+                    else
+                    {
+                        cur_link.w += change_weight_dis(m_mt19937);
+                    }
                 }
             }
         }
 
-        if( rate_dis(m_mt19937) < m_add_node_rate )
+        if( rate_dis(m_mt19937) < m_params.add_node_rate )
         {
             std::uniform_int_distribution<int32_t> num_link_dis(0, p.links.size() - 1);
 
             add_node(p, num_link_dis(m_mt19937));
         }
 
-        if( rate_dis(m_mt19937) < m_add_link_rate )
+        if( rate_dis(m_mt19937) < m_params.add_link_rate )
         {
-            std::uniform_int_distribution<int32_t> num_node_dis(0, 1);
+            std::uniform_int_distribution<int32_t> num_node_dis(0, p.nodes.size() - 1);
 
             add_link(p, num_node_dis(m_mt19937), num_node_dis(m_mt19937));
         }
@@ -797,36 +838,11 @@ void population::cross_parents_in_species() noexcept
     }
 }
 //-----------------------------------------------------------------------------
-void population::random_init() noexcept
-{
-    std::uniform_real_distribution<float> float_dis(-1.0f, 1.0f);
-
-    for( individual& p : m_individuals )
-    {
-        for( node& pn : p.nodes )
-        {
-            pn.bias = float_dis(m_mt19937);
-        }
-
-        for( link& pl : p.links )
-        {
-            pl.w = float_dis(m_mt19937);
-        }
-    }
-}
-//-----------------------------------------------------------------------------
 void population::split_into_species() noexcept
 {
-    for( individual& p : m_individuals )
-    {
-        p.species = 0;
-    }
-
     m_species.clear();
 
-    uint32_t frst_ndvdl_ndx = 0, scnd_ndvdl_ndx = 0, free_species = 1;
-
-    m_individuals[0].species = free_species++; // Поместим первую особь сразу в первый вид.
+    uint32_t ndvdl_ndx = 1;
 
     species new_species;
 
@@ -835,66 +851,34 @@ void population::split_into_species() noexcept
 
     m_species.push_back(new_species);
 
-    while( frst_ndvdl_ndx < m_individuals.size() )
+    while( ndvdl_ndx < m_individuals.size() )
     {
-        individual &frst_ndvdl = m_individuals[frst_ndvdl_ndx];
+        bool placed = false;
 
-        if( m_individuals[frst_ndvdl_ndx].species == 0 )
+        for( species &s : m_species )
         {
-            bool placed = false;
-            scnd_ndvdl_ndx = 0;
-
-            while( scnd_ndvdl_ndx < m_individuals.size() )
+            if( calc_distance_between_parents(m_individuals[s.individuals[0]],
+                                              m_individuals[ndvdl_ndx],
+                                              m_params.c1, m_params.c2, m_params.c3) <= m_params.max_distance_between_species )
             {
-                if( frst_ndvdl_ndx == scnd_ndvdl_ndx )
-                {
-                    ++scnd_ndvdl_ndx;
-                    continue;
-                }
+                s.individuals.push_back(ndvdl_ndx);
 
-                individual &scnd_ndvdl = m_individuals[scnd_ndvdl_ndx];
-
-                if( calc_distance_between_parents( frst_ndvdl, scnd_ndvdl, m_c1, m_c2, m_c3) <= m_max_distance_between_species )
-                {
-                    if( scnd_ndvdl.species == 0 )
-                    {
-                        scnd_ndvdl.species = free_species++;
-
-                        species new_species;
-
-                        new_species.number_of_children = 0;
-                        new_species.avg_fitness = 0.0f;
-                        new_species.individuals.push_back(scnd_ndvdl_ndx);
-
-                        m_species.push_back(new_species);
-                    }
-
-                    frst_ndvdl.species = scnd_ndvdl.species;
-
-                    m_species[frst_ndvdl.species - 1].individuals.push_back(frst_ndvdl_ndx);
-
-                    placed = true;
-                    break;
-                }
-
-                ++scnd_ndvdl_ndx;
-            }
-
-            if( placed == false )
-            {
-                frst_ndvdl.species = free_species++;
-
-                species new_species;
-
-                new_species.number_of_children = 0;
-                new_species.avg_fitness = 0.0f;
-                new_species.individuals.push_back(frst_ndvdl_ndx);
-
-                m_species.push_back(new_species);
+                placed = true;
+                break;
             }
         }
 
-        ++frst_ndvdl_ndx;
+        if( placed == false )
+        {
+            species new_species;
+
+            new_species.individuals.push_back(ndvdl_ndx);
+            new_species.avg_fitness = 0.0f;
+
+            m_species.push_back(new_species);
+        }
+
+        ++ndvdl_ndx;
     }
 
     for( species &s : m_species )
@@ -902,6 +886,22 @@ void population::split_into_species() noexcept
         std::sort(s.individuals.begin(), s.individuals.end(), [&](uint32_t a, uint32_t b) {
             return m_individuals[a].fitness < m_individuals[b].fitness;
         });
+    }
+}
+//-----------------------------------------------------------------------------
+void population::correct_max_distance_between_species() noexcept
+{
+    uint32_t species_num = get_species_num();
+
+    if( species_num > m_params.species_num )
+    {
+        m_params.max_distance_between_species += m_params.distance_up_step;
+        std::cout << "new distance: " << m_params.max_distance_between_species << std::endl;
+    }
+    else if( species_num < m_params.species_num )
+    {
+        m_params.max_distance_between_species -= m_params.distance_down_step;
+        std::cout << "new distance: " << m_params.max_distance_between_species << std::endl;
     }
 }
 //-----------------------------------------------------------------------------
@@ -1012,11 +1012,6 @@ void population::get_output_signal(individual& p, std::vector<float>& sgnls) noe
 //-----------------------------------------------------------------------------
 bool population::add_node(individual& p, uint32_t link_num) noexcept
 {
-    if( check_calc_queue(p) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
     link& lnk = p.links[link_num];
 
     uint32_t new_link_in_time_stamp = 0;
@@ -1145,16 +1140,16 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
 
     rebuild_links_queue(p);
 
-    if( check_calc_queue(p) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
     return true;
 }
 //-----------------------------------------------------------------------------
 bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
+    if( check_links(p) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
+
     if( neu_out <= m_in_signal_size )
     {
         return false;
@@ -1195,6 +1190,7 @@ bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noex
         if( new_link_time_stamp < ins_it->time_stamp )
         {
             p.links.insert(ins_it, new_link);
+            new_link_inserted = true;
 
             break;
         }
@@ -1208,6 +1204,11 @@ bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noex
     }
 
     rebuild_links_queue(p);
+
+    if( check_links(p) == false )
+    {
+        std::cout << "error" << std::endl;
+    }
 
     return true;
 }
