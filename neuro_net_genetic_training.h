@@ -81,7 +81,8 @@ public:
 
     void reset() noexcept;
 
-    uint32_t get_time_stamp_for_node(uint32_t link_time_stamp, uint32_t& link_in_time_stamp, uint32_t& link_out_time_stamp);
+    uint32_t get_time_stamp_for_node(uint32_t link_time_stamp, uint32_t node_in_time_stamp, uint32_t node_out_time_stamp,
+                                     uint32_t& link_in_time_stamp, uint32_t& link_out_time_stamp);
     uint32_t get_time_stamp_for_link(uint32_t node_in_time_stamp, uint32_t node_out_time_stamp);
 
 protected:
@@ -105,32 +106,32 @@ protected:
 //-----------------------------------------------------------------------------
 struct population_params
 {
-    float add_node_rate      = 0.01f;
+    float add_node_rate      = 0.001f;
     float add_link_rate      = 0.05f;
 
     float change_link_rate   = 0.30f;  // Вероятность изменения веса.
     float resete_link_rate   = 0.01f;  // Вероятность сбросить значение веса на новое из диапазона [-1;1),
                                        // в противном случае его значение изменится на число из диапазона [-1.0;1.0).
 
-    float cross_rate         = 0.50f;
-
-    float enable_link_rate   = 0.75f;
+    float enable_link_rate   = 0.50f;
 
     float max_distance_between_species = 1.0f; // Максимальное расстояние между особями одного вида.
 
     float c1 = 1.0f;
     float c2 = 1.0f;
-    float c3 = 0.0f;
+    float c3 = 1.0f;
 
-    float reset_weight_down  = -1.0f;
-    float reset_weight_up    = 1.0f;
+    float reset_weight_down     = -1.0f;
+    float reset_weight_up       = 1.0f;
 
-    float change_weight_down = -1.0f;
-    float change_weight_up   = 1.0f;
+    float change_weight_down    = -1.0f;
+    float change_weight_up      = 1.0f;
 
-    uint32_t species_num        = 30;
+    uint32_t species_num        = 20;
     float    distance_up_step   = 0.1f;
     float    distance_down_step = 0.1f;
+
+    bool     enable_recursive_links = false;
 };
 //-----------------------------------------------------------------------------
 class population
@@ -181,6 +182,7 @@ protected:
 
     bool     add_node(individual& p, uint32_t link_num) noexcept;
     bool     add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept;
+    bool     new_link_is_recursive(const individual& p, uint32_t in_ndx, uint32_t out_ndx);
 
     uint32_t m_in_signal_size;
     uint32_t m_out_signal_size;

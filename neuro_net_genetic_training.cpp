@@ -25,6 +25,8 @@ void time_stamp_distributor::reset() noexcept
 }
 //-----------------------------------------------------------------------------
 uint32_t time_stamp_distributor::get_time_stamp_for_node(uint32_t link_time_stamp,
+                                                         uint32_t node_in_time_stamp,
+                                                         uint32_t node_out_time_stamp,
                                                          uint32_t& link_in_time_stamp,
                                                          uint32_t& link_out_time_stamp)
 {
@@ -39,11 +41,8 @@ uint32_t time_stamp_distributor::get_time_stamp_for_node(uint32_t link_time_stam
         node_time_stamp = m_free_node_time_stamp;
         ++m_free_node_time_stamp;
 
-        link_in_time_stamp = m_free_link_time_stamp;
-        ++m_free_link_time_stamp;
-
-        link_out_time_stamp = m_free_link_time_stamp;
-        ++m_free_link_time_stamp;
+        link_in_time_stamp = get_time_stamp_for_link(node_in_time_stamp, node_time_stamp);
+        link_out_time_stamp = get_time_stamp_for_link(node_time_stamp, node_out_time_stamp);
 
         _node_time_stamp_struct.time_stamp = node_time_stamp;
         _node_time_stamp_struct.link_in_time_stamp = link_in_time_stamp;
@@ -102,7 +101,7 @@ population::population(uint32_t population_size, uint32_t in_signal_size, uint32
     : m_in_signal_size(in_signal_size)
     , m_out_signal_size(out_signal_size)
     , m_training_patterns(in_signal_size, out_signal_size)
-    , m_time_stamp_distributor(in_signal_size + out_signal_size, in_signal_size * out_signal_size)
+    , m_time_stamp_distributor(in_signal_size + out_signal_size, 0)
     , m_mt19937(m_random_device())
 {
     reset(population_size);
@@ -189,7 +188,10 @@ void population::reset_individual(individual &p) throw(std::runtime_error)
         {
             link new_link;
 
-            new_link.time_stamp = link_time_stamp;
+            uint32_t in_node_time_stamp = p.nodes[cur_in_node].time_stamp;
+            uint32_t out_node_time_stamp = p.nodes[cur_out_node].time_stamp;
+
+            new_link.time_stamp = m_time_stamp_distributor.get_time_stamp_for_link(in_node_time_stamp, out_node_time_stamp);
             new_link.in = cur_in_node;
             new_link.out = cur_out_node;
 
@@ -203,16 +205,16 @@ void population::reset_individual(individual &p) throw(std::runtime_error)
         }
     }
 
-    std::uniform_real_distribution<float> float_dis(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> weight_dis(m_params.reset_weight_down, m_params.reset_weight_up);
 
     for( node& pn : p.nodes )
     {
-        pn.bias = float_dis(m_mt19937);
+        pn.bias = weight_dis(m_mt19937);
     }
 
     for( link& pl : p.links )
     {
-        pl.w = float_dis(m_mt19937);
+        pl.w = weight_dis(m_mt19937);
     }
 
     rebuild_links_queue(p);
@@ -310,21 +312,31 @@ bool population::check_links(const individual &p) noexcept
         }
     }
 
+    uint32_t ndx1 = 0;
+    uint32_t ndx2 = 0;
+
+    for( uint32_t i = 0; i < p.links.size(); ++i )
+    {
+        ndx1 = p.links[i].in;
+        ndx2 = p.links[i].out;
+
+        for( uint32_t j = 0; j < p.links.size(); ++j )
+        {
+            if( i != j )
+            {
+                if( p.links[j].in == ndx1 && p.links[j].out == ndx2 )
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
     return true;
 }
 //-----------------------------------------------------------------------------
 void population::cross_parents(const individual &p1, const individual &p2, individual &offspring) noexcept
 {
-    if( check_links(p1) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
-    if( check_links(p2) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
     std::uniform_real_distribution<float> rate_dis(0.0f, 1.0f);
 
     offspring.nodes.clear();
@@ -586,16 +598,6 @@ void population::cross_parents(const individual &p1, const individual &p2, indiv
         }
 
         ++it1;
-    }
-
-    if( check_links(p1) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
-    if( check_links(p2) == false )
-    {
-        std::cout << "error" << std::endl;
     }
 
     rebuild_links_queue(offspring);
@@ -1017,8 +1019,12 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
     uint32_t new_link_in_time_stamp = 0;
     uint32_t new_link_out_time_stamp = 0;
 
+    uint32_t node_in_time_stamp = p.nodes[lnk.in].time_stamp;
+    uint32_t node_out_time_stamp = p.nodes[lnk.out].time_stamp;
+
     uint32_t new_node_time_stamp = m_time_stamp_distributor.get_time_stamp_for_node(
-                                       lnk.time_stamp, new_link_in_time_stamp, new_link_out_time_stamp);
+                                       lnk.time_stamp, node_in_time_stamp, node_out_time_stamp,
+                                       new_link_in_time_stamp, new_link_out_time_stamp);
 
     for( node& cur_node : p.nodes )
     {
@@ -1037,7 +1043,7 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
     new_node.type = node_type::hidden_node;
     new_node.activation_func = node_activation_func_type::hyperbolic_activation_func;
 
-    std::uniform_real_distribution<float>  weight_dis(-1.0f, 1.0f);
+    std::uniform_real_distribution<float>  weight_dis(m_params.reset_weight_down, m_params.reset_weight_up);
 
     new_node.bias = weight_dis(m_mt19937);
     new_node.sum = 0.0f;
@@ -1145,14 +1151,19 @@ bool population::add_node(individual& p, uint32_t link_num) noexcept
 //-----------------------------------------------------------------------------
 bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noexcept
 {
-    if( check_links(p) == false )
-    {
-        std::cout << "error" << std::endl;
-    }
-
-    if( neu_out <= m_in_signal_size )
+    // Не передавать сигнал входным нейронам.
+    if( neu_out < m_in_signal_size )
     {
         return false;
+    }
+
+    // Если параметрами алгоритма запрещены рекурсивные соединения, то не будем добавлять такие.
+    if( m_params.enable_recursive_links == false )
+    {
+        if( new_link_is_recursive(p, neu_in, neu_out) == true )
+        {
+            return false;
+        }
     }
 
     uint32_t neu_in_time_stamp = p.nodes[neu_in].time_stamp;
@@ -1177,7 +1188,7 @@ bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noex
     new_link.in = neu_in;
     new_link.out = neu_out;
 
-    std::uniform_real_distribution<float>  weight_dis(-1.0f, 1.0f);
+    std::uniform_real_distribution<float>  weight_dis(m_params.reset_weight_down, m_params.reset_weight_up);
 
     new_link.w = weight_dis(m_mt19937);
 
@@ -1205,11 +1216,37 @@ bool population::add_link(individual& p, uint32_t neu_in, uint32_t neu_out) noex
 
     rebuild_links_queue(p);
 
-    if( check_links(p) == false )
+    return true;
+}
+//-----------------------------------------------------------------------------
+bool population::new_link_is_recursive(const individual& p, uint32_t in_ndx, uint32_t out_ndx)
+{
+    if( in_ndx == out_ndx )
     {
-        std::cout << "error" << std::endl;
+        return true;
     }
 
-    return true;
+    bool in_found = in_ndx < m_in_signal_size ? true : false;
+
+    for( uint32_t i = 0; i < p.calc_queue.size(); ++i )
+    {
+        if( in_found == false && p.calc_queue[i] == in_ndx )
+        {
+            in_found = true;
+        }
+        else if( p.calc_queue[i] == out_ndx )
+        {
+            if( in_found == true )
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 //-----------------------------------------------------------------------------
